@@ -6,42 +6,36 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --text: #ffffff; --sub: rgba(255,255,255,0.6); }
-        .buy-theme { background: linear-gradient(135deg, #2d0036 0%, #000000 100%); --acc: #ff00ff; }
-        .sell-theme { background: linear-gradient(135deg, #3d1a00 0%, #000000 100%); --acc: #ff9900; }
-        .prof-theme { background: linear-gradient(135deg, #1c1c1c 0%, #000000 100%); --acc: #8e8e93; }
+        .buy-theme { background: linear-gradient(135deg, #30003b 0%, #000000 100%); --acc: #e000e0; }
+        .sell-theme { background: linear-gradient(135deg, #4d2100 0%, #000000 100%); --acc: #ff8c00; }
+        .prof-theme { background: linear-gradient(135deg, #222 0%, #000 100%); --acc: #777; }
 
-        body { font-family: -apple-system, system-ui, sans-serif; color: var(--text); margin: 0; padding: 16px; transition: 0.5s; min-height: 100vh; padding-bottom: 110px; overflow-x: hidden; }
-        .card { background: rgba(255,255,255,0.05); border-radius: 28px; padding: 24px; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
+        body { font-family: -apple-system, system-ui, sans-serif; color: var(--text); margin: 0; padding: 16px; transition: 0.5s; min-height: 100vh; padding-bottom: 120px; }
+        .card { background: rgba(255,255,255,0.07); border-radius: 28px; padding: 24px; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
         
-        h2 { font-size: 24px; font-weight: 800; margin: 0 0 15px 0; }
+        h2 { font-size: 24px; font-weight: 800; margin: 0 0 15px 0; letter-spacing: -0.5px; }
         input, textarea { width: 100%; box-sizing: border-box; padding: 18px; margin: 10px 0; border-radius: 18px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: white; font-size: 16px; outline: none; }
         
-        .btn { width: 100%; padding: 18px; border: none; border-radius: 20px; background: var(--acc); color: white; font-weight: 800; font-size: 16px; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .btn:active { transform: scale(0.97); }
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 20px; background: var(--acc); color: white; font-weight: 800; font-size: 16px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .btn:active { transform: scale(0.97); filter: brightness(1.2); }
 
-        /* Загрузка файла */
-        .file-box { border: 2px dashed rgba(255,255,255,0.2); border-radius: 18px; padding: 20px; text-align: center; margin: 15px 0; cursor: pointer; transition: 0.3s; }
-        .file-box:hover { border-color: var(--acc); background: rgba(255,255,255,0.03); }
-        #preview { width: 100%; border-radius: 12px; margin-top: 10px; display: none; border: 1px solid var(--acc); }
+        .file-box { border: 2px dashed rgba(255,255,255,0.2); border-radius: 20px; padding: 25px; text-align: center; margin: 15px 0; cursor: pointer; background: rgba(255,255,255,0.03); }
+        #preview { width: 100%; border-radius: 14px; margin-top: 10px; display: none; border: 1px solid var(--acc); }
 
-        /* Навигация */
-        .nav { position: fixed; bottom: 25px; left: 20px; right: 20px; background: rgba(255,255,255,0.08); backdrop-filter: blur(25px); display: flex; justify-content: space-around; padding: 12px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); z-index: 100; }
+        .nav { position: fixed; bottom: 25px; left: 20px; right: 20px; background: rgba(0,0,0,0.5); backdrop-filter: blur(25px); display: flex; justify-content: space-around; padding: 12px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
         .nav-btn { background: none; border: none; color: var(--sub); font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 600; }
         .nav-btn.active { color: white; }
         .nav-btn span { font-size: 22px; }
 
-        /* Профиль */
         .avatar { width: 85px; height: 85px; border-radius: 50%; border: 3px solid var(--acc); margin: 0 auto 15px; overflow: hidden; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .stat-card { background: rgba(255,255,255,0.04); padding: 15px; border-radius: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .stat-card { background: rgba(255,255,255,0.04); padding: 15px; border-radius: 22px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
 
-        /* Модалки для документов */
         #doc-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 200; padding: 30px 20px; box-sizing: border-box; overflow-y: auto; }
-        .doc-text { color: var(--sub); font-size: 14px; line-height: 1.6; }
-        .close-doc { position: fixed; top: 20px; right: 20px; background: var(--acc); color: white; padding: 8px 15px; border-radius: 10px; font-weight: 700; }
+        .doc-text { color: var(--sub); font-size: 14px; line-height: 1.6; white-space: pre-line; }
 
-        .hist-item { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 18px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
+        .hist-item { background: rgba(255,255,255,0.04); padding: 15px; border-radius: 18px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .st-Completed { color: #00ff88; font-weight: 800; font-size: 11px; }
         .st-Progress { color: #ffcc00; font-weight: 800; font-size: 11px; }
     </style>
@@ -53,48 +47,48 @@
         <input type="number" id="i-buy" placeholder="Кол-во Gold" oninput="calc('buy')">
         
         <div class="file-box" onclick="document.getElementById('file-input').click()">
-            <span id="file-label">📸 Прикрепить скриншот лота</span>
+            <span id="file-label">📸 Прикрепить скрин лота</span>
             <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFile(this)">
             <img id="preview">
         </div>
 
-        <div style="font-size:36px; font-weight:900; text-align:center; color:#ff00ff; margin:15px 0" id="o-buy">0 ₽</div>
-        <button class="btn" onclick="process('buy')">ОПЛАТИТЬ И ОТПРАВИТЬ</button>
+        <div style="font-size:38px; font-weight:900; text-align:center; color:#ff00ff; margin:15px 0" id="o-buy">0 ₽</div>
+        <button class="btn" onclick="process('buy')">КУПИТЬ</button>
         
-        <div style="margin-top:20px">
-            <div onclick="showDoc('offer')" style="color:var(--sub); font-size:13px; margin-bottom:10px">📜 Публичная оферта</div>
-            <div onclick="showDoc('policy')" style="color:var(--sub); font-size:13px">🛡️ Политика конфиденциальности</div>
+        <div style="margin-top:25px">
+            <div onclick="showDoc('offer')" style="color:var(--sub); font-size:13px; margin-bottom:12px; text-decoration: underline;">📜 Публичная оферта</div>
+            <div onclick="showDoc('policy')" style="color:var(--sub); font-size:13px; text-decoration: underline;">🛡️ Политика конфиденциальности</div>
         </div>
     </div>
 
     <div id="p-sell" class="card" style="display:none">
         <h2>💸 Продать Gold</h2>
-        <p style="font-size:13px; color:var(--sub); margin-bottom:15px">После подачи заявки админ пришлет вам данные скина. Выкупите его и введите реквизиты для получения выплаты.</p>
-        <input type="number" id="i-sell" placeholder="Кол-во Gold на продажу" oninput="calc('sell')">
-        <div style="font-size:28px; font-weight:900; text-align:center; color:#ff9900; margin:15px 0" id="o-sell">Вы получите: 0 ₽</div>
-        <button class="btn" onclick="process('sell')">ПОДАТЬ ЗАЯВКУ</button>
+        <p style="font-size:13px; color:var(--sub); margin-bottom:15px">Оставьте заявку. Админ отправит вам скин для выкупа. После выкупа напишите реквизиты для получения денег.</p>
+        <input type="number" id="i-sell" placeholder="Кол-во Gold" oninput="calc('sell')">
+        <div style="font-size:30px; font-weight:900; text-align:center; color:#ff9900; margin:15px 0" id="o-sell">Вы получите: 0 ₽</div>
+        <button class="btn" onclick="process('sell')">ОСТАВИТЬ ЗАЯВКУ</button>
     </div>
 
     <div id="p-prof" style="display:none">
         <div class="card" style="text-align:center">
             <div class="avatar" id="u-ava">👤</div>
-            <h3 id="u-name" style="margin:0">Загрузка...</h3>
+            <h3 id="u-name" style="margin:0">...</h3>
             <p id="u-id" style="color:var(--sub); font-size:12px">ID: ...</p>
             
             <div class="stats">
-                <div class="stat-card"><div style="color:#ff00ff; font-weight:900" id="s-bought">0G</div><div style="font-size:10px; color:var(--sub)">КУПЛЕНО</div></div>
-                <div class="stat-card"><div style="color:#ff9900; font-weight:900" id="s-sold">0G</div><div style="font-size:10px; color:var(--sub)">ПРОДАНО</div></div>
+                <div class="stat-card"><div style="color:#ff00ff; font-weight:900; font-size:20px" id="s-bought">0G</div><div style="font-size:10px; color:var(--sub)">КУПЛЕНО</div></div>
+                <div class="stat-card"><div style="color:#ff9900; font-weight:900; font-size:20px" id="s-sold">0G</div><div style="font-size:10px; color:var(--sub)">ПРОДАНО</div></div>
             </div>
         </div>
         
         <div class="card">
             <h4 style="margin:0 0 15px 0">История операций</h4>
-            <div id="history-list"></div>
+            <div id="history-list">Загрузка...</div>
         </div>
     </div>
 
     <div id="doc-modal">
-        <div class="close-doc" onclick="this.parentElement.style.display='none'">ЗАКРЫТЬ</div>
+        <button class="btn" onclick="this.parentElement.style.display='none'" style="margin-bottom:20px">ЗАКРЫТЬ</button>
         <h2 id="doc-title"></h2>
         <div class="doc-text" id="doc-content"></div>
     </div>
@@ -108,7 +102,7 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        const user = tg.initDataUnsafe.user || {id: 0, first_name: 'Пользователь'};
+        const user = tg.initDataUnsafe.user || {id: 123, first_name: 'Пользователь'};
         let base64Image = null;
 
         document.getElementById('u-id').innerText = "ID: " + user.id;
@@ -132,7 +126,7 @@
                 base64Image = e.target.result;
                 document.getElementById('preview').src = base64Image;
                 document.getElementById('preview').style.display = 'block';
-                document.getElementById('file-label').innerText = "✅ Скриншот выбран";
+                document.getElementById('file-label').innerText = "✅ Скриншот загружен";
             };
             reader.readAsDataURL(file);
         }
@@ -140,18 +134,18 @@
         function calc(t) {
             const v = document.getElementById('i-'+t).value;
             if(t==='buy') document.getElementById('o-buy').innerText = Math.round(v * 0.55) + " ₽";
-            else document.getElementById('o-sell').innerText = "Вы получите: " + Math.round(v * 0.45) + " ₽";
+            else document.getElementById('o-sell').innerText = Math.round(v * 0.45) + " ₽";
         }
 
         async function process(type) {
             const amt = document.getElementById('i-'+type).value;
             if(!amt || amt < 100) return tg.showAlert("Минимум 100 Gold");
-            if(type === 'buy' && !base64Image) return tg.showAlert("Пожалуйста, прикрепите скриншот лота!");
+            if(type === 'buy' && !base64Image) return tg.showAlert("Прикрепите скриншот лота!");
 
-            tg.MainButton.setText("ОТПРАВКА...").show();
+            tg.MainButton.setText("ОТПРАВЛЯЕМ...").show();
             
             try {
-                const res = await fetch('https://vo1dminiapp.5487n7z82j.workers.dev', {
+                await fetch('https://vo1dminiapp.5487n7z82j.workers.dev', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ 
@@ -162,11 +156,9 @@
                         image: base64Image
                     })
                 });
-                if(res.ok) {
-                    tg.showAlert("Заявка успешно отправлена! Ожидайте ответа в боте.");
-                    tg.close();
-                }
-            } catch(e) { tg.showAlert("Ошибка соединения"); }
+                tg.showAlert("Готово! Проверьте сообщения в боте.");
+                tg.close();
+            } catch(e) { tg.showAlert("Ошибка!"); }
             tg.MainButton.hide();
         }
 
@@ -181,22 +173,20 @@
             document.getElementById('history-list').innerHTML = data.history.map(h => `
                 <div class="hist-item">
                     <div><b>${h.amt} G</b><br><small>${h.type==='buy'?'Покупка':'Продажа'}</small></div>
-                    <div class="st-${h.status}">${h.status === 'Completed' ? 'ВЫПОЛНЕНО' : 'В ПРОЦЕССЕ'}</div>
+                    <div class="${h.status==='Completed'?'st-Completed':'st-Progress'}">${h.status==='Completed'?'ВЫПОЛНЕНО':'В ПРОЦЕССЕ'}</div>
                 </div>
-            `).join('') || "Нет данных";
+            `).join('') || "История пуста";
         }
 
         function showDoc(type) {
             const m = document.getElementById('doc-modal');
-            const t = document.getElementById('doc-title');
-            const c = document.getElementById('doc-content');
             m.style.display = 'block';
             if(type === 'offer') {
-                t.innerText = "Публичная оферта";
-                c.innerText = "Текст вашей оферты... \n1. Предмет договора... \n2. Порядок оплаты... \n3. Ответственность сторон...";
+                document.getElementById('doc-title').innerText = "Публичная оферта";
+                document.getElementById('doc-content').innerText = "1. ОБЩИЕ ПОЛОЖЕНИЯ\nПроект VO1D предоставляет услуги по обмену игровой валюты.\n\n2. ПОРЯДОК ОКАЗАНИЯ УСЛУГ\nПользователь самостоятельно выбирает количество валюты. Сделка считается завершенной после подтверждения передачи валюты в игре.\n\n3. ОТКАЗ ОТ ОТВЕТСТВЕННОСТИ\nМы не несем ответственности за блокировки аккаунтов со стороны разработчиков игры.";
             } else {
-                t.innerText = "Политика конфиденциальности";
-                c.innerText = "Мы не храним ваши данные... \nИспользуем только ID Telegram для обработки заказов.";
+                document.getElementById('doc-title').innerText = "Политика конфиденциальности";
+                document.getElementById('doc-content').innerText = "Мы уважаем вашу анонимность. \n\n- Мы собираем только ваш Telegram ID для обработки заказов.\n- Мы не передаем ваши данные третьим лицам.\n- Скриншоты заказов удаляются после завершения сделки.";
             }
         }
     </script>
