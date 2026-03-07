@@ -5,47 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --bg: #0b0b0b; --text: #ffffff; --acc: #ff00ff; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
-        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 20px; border-radius: 24px; margin-top: 20px; }
-        input { width: 100%; box-sizing: border-box; padding: 16px; margin: 12px 0; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: white; font-size: 16px; }
-        .btn { width: 100%; padding: 18px; border: none; border-radius: 16px; background: var(--acc); color: white; font-weight: bold; font-size: 16px; cursor: pointer; }
-        .status { font-size: 12px; color: #888; text-align: center; margin-top: 10px; }
+        :root { --acc: #ff00ff; --bg: #0b0b0b; }
+        body { font-family: sans-serif; background: var(--bg); color: white; padding: 20px; text-align: center; }
+        .card { background: #1a1a1a; padding: 25px; border-radius: 24px; border: 1px solid #333; }
+        input { width: 100%; padding: 15px; margin: 15px 0; border-radius: 12px; border: 1px solid #444; background: #000; color: white; box-sizing: border-box; font-size: 18px; }
+        .btn { width: 100%; padding: 18px; border-radius: 15px; border: none; background: var(--acc); color: white; font-weight: bold; font-size: 16px; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2 id="title">💎 Купить Gold</h2>
-        <input type="number" id="amount" placeholder="Количество Gold">
-        <button class="btn" onclick="order()">ОФОРМИТЬ ЗАКАЗ</button>
-        <div id="status" class="status"></div>
+        <h2>💎 Купить Gold</h2>
+        <input type="number" id="amt" placeholder="Количество">
+        <button class="btn" onclick="sendOrder()">ОФОРМИТЬ ЗАКАЗ</button>
+        <p id="status" style="font-size: 12px; color: #888; margin-top: 15px;"></p>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
 
-        async function order() {
-            const amt = document.getElementById('amount').value;
+        async function sendOrder() {
+            const val = document.getElementById('amt').value;
             const status = document.getElementById('status');
-            
-            if (!amt || amt < 100) return alert("Минимум 100G");
+            if (!val || val < 100) return alert("Минимум 100G");
 
-            status.innerText = "⏳ Отправка...";
-            
-            // Прямой запрос к твоему Worker
-            // ВАЖНО: Мы отправляем сигнал боту через специальный API
-            const data = {
+            status.innerText = "⏳ Соединение с сервером...";
+
+            // Собираем данные для твоего Воркера
+            const orderData = {
+                method: "direct_order", // Пометка, что это не обычное сообщение
                 user_id: tg.initDataUnsafe.user?.id,
-                query_id: tg.initDataUnsafe.query_id, // Ключ для ответа
-                amt: amt
+                amt: val,
+                type: "buy"
             };
 
-            // Закрываем приложение, бот ответит сам через ответ на запрос
-            tg.sendData(JSON.stringify({type: 'buy', amt: amt})); 
-            
-            // Если sendData опять не сработает, приложение просто закроется через 2 сек
-            setTimeout(() => { tg.close(); }, 500);
+            try {
+                // ОТПРАВЛЯЕМ НАПРЯМУЮ В ТВОЙ WORKER
+                // (Замени URL ниже на свой, если он отличается)
+                const response = await fetch('https://vo1dapp.5487n7z82j.workers.dev', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+
+                if (response.ok) {
+                    status.innerText = "✅ Заказ принят! Закрываем...";
+                    setTimeout(() => tg.close(), 1000);
+                } else {
+                    status.innerText = "❌ Ошибка сервера. Попробуй еще раз.";
+                }
+            } catch (e) {
+                status.innerText = "❌ Ошибка сети: " + e.message;
+            }
         }
     </script>
 </body>
