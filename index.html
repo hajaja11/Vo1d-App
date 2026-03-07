@@ -5,18 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: var(--tg-theme-bg-color, #ffffff); color: var(--tg-theme-text-color, #000000); text-align: center; padding: 20px; }
-        .card { background: var(--tg-theme-secondary-bg-color, #f0f0f0); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        input { width: 80%; padding: 12px; margin: 15px 0; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }
-        button { background: var(--tg-theme-button-color, #0088cc); color: var(--tg-theme-button-text-color, #ffffff); border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 85%; }
+        :root { --main: #0088cc; --bg: #1a1a1a; --card: #2a2a2a; --text: #ffffff; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+        .card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #333; margin-bottom: 15px; }
+        .nav { display: flex; gap: 8px; margin-bottom: 15px; background: #333; padding: 4px; border-radius: 12px; }
+        .nav-btn { flex: 1; padding: 10px; border-radius: 10px; border: none; background: none; color: #aaa; cursor: pointer; transition: 0.3s; }
+        .nav-btn.active { background: var(--main); color: white; }
+        input { width: 100%; box-sizing: border-box; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #1a1a1a; color: white; font-size: 16px; }
+        .btn { background: var(--main); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; font-size: 16px; margin-top: 10px; }
+        .info { font-size: 14px; color: #aaa; margin-top: 5px; text-align: left; }
+        .price-tag { font-size: 20px; font-weight: bold; color: var(--main); margin: 10px 0; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>💎 Покупка Gold</h2>
-        <p>Введите количество:</p>
-        <input type="number" id="goldAmount" placeholder="Минимум 100" min="100">
-        <button onclick="sendData()">Продолжить</button>
+    <div class="nav">
+        <button id="buy-tab" class="nav-btn active" onclick="show('buy')">Купить</button>
+        <button id="sell-tab" class="nav-btn" onclick="show('sell')">Продать</button>
+        <button id="prof-tab" class="nav-btn" onclick="show('prof')">Профиль</button>
+    </div>
+
+    <div id="buy-box" class="card">
+        <h3>🛒 Покупка Gold</h3>
+        <input type="number" id="buy-amt" placeholder="Количество Gold" oninput="calc()">
+        <div class="info">Курс: 0.55₽ за 1G</div>
+        <div class="price-tag" id="buy-price">0 ₽</div>
+        <input type="text" id="promo" placeholder="Промокод (если есть)">
+        <button class="btn" onclick="sendOrder('buy')">Оформить заказ</button>
+    </div>
+
+    <div id="sell-box" class="card" style="display:none">
+        <h3>💸 Продажа Gold</h3>
+        <input type="number" id="sell-amt" placeholder="Количество Gold">
+        <div class="info">Наш курс скупки: 0.45₽</div>
+        <button class="btn" onclick="sendOrder('sell')" style="background: #cc8800;">Продать</button>
+    </div>
+
+    <div id="prof-box" class="card" style="display:none">
+        <h3>👤 Профиль</h3>
+        <p>Ваш ранг: <b>Legend 💎</b></p>
+        <p>Скидка: <b>10%</b></p>
     </div>
 
     <script>
@@ -24,13 +51,26 @@
         tg.ready();
         tg.expand();
 
-        function sendData() {
-            const val = document.getElementById('goldAmount').value;
-            if (val < 100) {
-                alert("Минимальная сумма — 100");
-                return;
-            }
-            tg.sendData(val); // Отправляет данные обратно в чат с ботом
+        function show(tab) {
+            document.getElementById('buy-box').style.display = tab === 'buy' ? 'block' : 'none';
+            document.getElementById('sell-box').style.display = tab === 'sell' ? 'block' : 'none';
+            document.getElementById('prof-box').style.display = tab === 'prof' ? 'block' : 'none';
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tab + '-tab').classList.add('active');
+        }
+
+        function calc() {
+            const amt = document.getElementById('buy-amt').value;
+            document.getElementById('buy-price').innerText = (amt * 0.55).toFixed(0) + ' ₽';
+        }
+
+        function sendOrder(type) {
+            const amt = type === 'buy' ? document.getElementById('buy-amt').value : document.getElementById('sell-amt').value;
+            const promo = document.getElementById('promo').value;
+            if (!amt || amt < 100) return tg.showAlert("Минимальная сумма — 100 Gold");
+            
+            tg.sendData(JSON.stringify({type, amt, promo}));
+            tg.close();
         }
     </script>
 </body>
