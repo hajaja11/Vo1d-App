@@ -5,84 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --bg: #0b0b0b; --text: #ffffff; }
+        :root { --bg: #0b0b0b; --text: #ffffff; --acc: #ff00ff; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
-        .buy-page { --acc: #ff00ff; background: linear-gradient(135deg, #2d0036 0%, #0b0b0b 100%); }
-        .sell-page { --acc: #ff9900; background: linear-gradient(135deg, #331a00 0%, #0b0b0b 100%); }
-        .prof-page { --acc: #444444; background: #1a1a1a; }
-        .container { min-height: 100vh; }
-        .nav { display: flex; gap: 8px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 16px; margin-bottom: 20px; }
-        .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: none; color: #666; font-weight: bold; }
-        .nav-btn.active { background: var(--acc); color: white; }
-        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 20px; border-radius: 24px; backdrop-filter: blur(10px); }
-        input { width: 100%; box-sizing: border-box; padding: 16px; margin: 12px 0; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: white; font-size: 16px; outline: none; }
-        .btn { width: 100%; padding: 18px; border: none; border-radius: 16px; background: var(--acc); color: white; font-weight: 800; font-size: 16px; margin-top: 10px; }
-        .res-text { font-size: 24px; font-weight: 900; color: var(--acc); margin: 15px 0; text-align: center; }
+        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 20px; border-radius: 24px; margin-top: 20px; }
+        input { width: 100%; box-sizing: border-box; padding: 16px; margin: 12px 0; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: white; font-size: 16px; }
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 16px; background: var(--acc); color: white; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .status { font-size: 12px; color: #888; text-align: center; margin-top: 10px; }
     </style>
 </head>
-<body class="buy-page" id="bdy">
-    <div class="container">
-        <div class="nav">
-            <button id="tab-buy" class="nav-btn active" onclick="setTab('buy')">КУПИТЬ</button>
-            <button id="tab-sell" class="nav-btn" onclick="setTab('sell')">ПРОДАТЬ</button>
-            <button id="tab-prof" class="nav-btn" onclick="setTab('prof')">ПРОФИЛЬ</button>
-        </div>
-
-        <div id="page-buy" class="card">
-            <h2 style="color:#ff00ff">💎 Купить Gold</h2>
-            <input type="number" id="in-buy" placeholder="Количество" oninput="recalc('buy')">
-            <div class="res-text" id="out-buy">0 ₽</div>
-            <button class="btn" onclick="sendData('buy')">ОФОРМИТЬ</button>
-        </div>
-
-        <div id="page-sell" class="card" style="display:none">
-            <h2 style="color:#ff9900">💸 Продать Gold</h2>
-            <input type="number" id="in-sell" placeholder="Количество" oninput="recalc('sell')">
-            <div class="res-text" id="out-sell">0 ₽</div>
-            <button class="btn" style="background:#ff9900" onclick="sendData('sell')">ПРОДАТЬ</button>
-        </div>
-
-        <div id="page-prof" class="card" style="display:none">
-            <h2>👤 Профиль</h2>
-            <p id="u-id">Загрузка ID...</p>
-            <p>Статус: <b>Active</b></p>
-        </div>
+<body>
+    <div class="card">
+        <h2 id="title">💎 Купить Gold</h2>
+        <input type="number" id="amount" placeholder="Количество Gold">
+        <button class="btn" onclick="order()">ОФОРМИТЬ ЗАКАЗ</button>
+        <div id="status" class="status"></div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
-        tg.expand();
-        
-        document.getElementById('u-id').innerText = "ID: " + (tg.initDataUnsafe.user?.id || "Unknown");
 
-        function setTab(t) {
-            document.getElementById('page-buy').style.display = t === 'buy' ? 'block' : 'none';
-            document.getElementById('page-sell').style.display = t === 'sell' ? 'block' : 'none';
-            document.getElementById('page-prof').style.display = t === 'prof' ? 'block' : 'none';
+        async function order() {
+            const amt = document.getElementById('amount').value;
+            const status = document.getElementById('status');
             
-            document.getElementById('tab-buy').classList.toggle('active', t === 'buy');
-            document.getElementById('tab-sell').classList.toggle('active', t === 'sell');
-            document.getElementById('tab-prof').classList.toggle('active', t === 'prof');
+            if (!amt || amt < 100) return alert("Минимум 100G");
+
+            status.innerText = "⏳ Отправка...";
             
-            document.getElementById('bdy').className = t + '-page';
-        }
+            // Прямой запрос к твоему Worker
+            // ВАЖНО: Мы отправляем сигнал боту через специальный API
+            const data = {
+                user_id: tg.initDataUnsafe.user?.id,
+                query_id: tg.initDataUnsafe.query_id, // Ключ для ответа
+                amt: amt
+            };
 
-        function recalc(t) {
-            const v = document.getElementById('in-' + t).value;
-            const res = t === 'buy' ? Math.round(v * 0.55) : Math.round(v * 0.45);
-            document.getElementById('out-' + t).innerText = res + " ₽";
-        }
-
-        function sendData(type) {
-            const amt = document.getElementById('in-' + type).value;
-            if (!amt || amt < 100) {
-                tg.showAlert("Минимум 100G");
-                return;
-            }
-            const data = JSON.stringify({type: type, amt: amt});
-            tg.sendData(data);
-            tg.close();
+            // Закрываем приложение, бот ответит сам через ответ на запрос
+            tg.sendData(JSON.stringify({type: 'buy', amt: amt})); 
+            
+            // Если sendData опять не сработает, приложение просто закроется через 2 сек
+            setTimeout(() => { tg.close(); }, 500);
         }
     </script>
 </body>
