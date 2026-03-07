@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; background-color: var(--tg-theme-bg-color, #ffffff); color: var(--tg-theme-text-color, #000000); text-align: center; padding: 20px; }
+        .card { background: var(--tg-theme-secondary-bg-color, #f0f0f0); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input { width: 80%; padding: 12px; margin: 15px 0; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }
+        button { background: var(--tg-theme-button-color, #0088cc); color: var(--tg-theme-button-text-color, #ffffff); border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 85%; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>💎 Покупка Gold</h2>
+        <p>Введите количество:</p>
+        <input type="number" id="goldAmount" placeholder="Минимум 100" min="100">
+        <button onclick="sendData()">Продолжить</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        function sendData() {
+            const val = document.getElementById('goldAmount').value;
+            if (val < 100) {
+                alert("Минимальная сумма — 100");
+                return;
+            }
+            tg.sendData(val); // Отправляет данные обратно в чат с ботом
+        }
+    </script>
+</body>
+</html>
