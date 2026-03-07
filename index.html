@@ -1,99 +1,37 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root { --bg: #0b0b0b; --text: #ffffff; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; overflow-x: hidden; transition: background 0.4s; }
-        
-        .buy-page { --acc: #ff00ff; --grad: linear-gradient(135deg, #2d0036 0%, #0b0b0b 100%); }
-        .sell-page { --acc: #ff9900; --grad: linear-gradient(135deg, #331a00 0%, #0b0b0b 100%); }
-        .prof-page { --acc: #444444; --grad: linear-gradient(135deg, #1a1a1a 0%, #0b0b0b 100%); }
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
 
-        .container { background: var(--grad); min-height: 100vh; position: fixed; top:0; left:0; right:0; padding: 15px; }
-        .nav { display: flex; gap: 8px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 16px; margin-bottom: 20px; }
-        .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: none; color: #666; font-weight: 600; font-size: 13px; transition: 0.3s; }
-        .nav-btn.active { background: var(--acc); color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
-
-        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 20px; border-radius: 24px; backdrop-filter: blur(10px); }
-        input { width: 100%; box-sizing: border-box; padding: 16px; margin: 12px 0; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: white; font-size: 16px; outline: none; }
-        input:focus { border-color: var(--acc); }
-
-        .btn { width: 100%; padding: 18px; border: none; border-radius: 16px; background: var(--acc); color: white; font-weight: 800; font-size: 16px; margin-top: 10px; cursor: pointer; }
-        .res-text { font-size: 24px; font-weight: 900; color: var(--acc); margin: 15px 0; text-align: center; }
-        .hint { font-size: 12px; color: #888; text-align: center; margin-top: 5px; }
-        
-        .ref-card { background: #111; padding: 15px; border-radius: 18px; margin-top: 15px; border-left: 4px solid #ff00ff; }
-    </style>
-</head>
-<body class="buy-page" id="bdy">
-    <div class="container">
-        <div class="nav">
-            <button id="tab-buy" class="nav-btn active" onclick="tab('buy')">КУПИТЬ</button>
-            <button id="tab-sell" class="nav-btn" onclick="tab('sell')">ПРОДАТЬ</button>
-            <button id="tab-prof" class="nav-btn" onclick="tab('prof')">ПРОФИЛЬ</button>
-        </div>
-
-        <div id="page-buy" class="card">
-            <h2 style="margin:0; color:#ff00ff">💎 Покупка Gold</h2>
-            <input type="number" id="in-buy" placeholder="Введите количество" oninput="calc('buy')">
-            <div class="res-text" id="out-buy">0 ₽</div>
-            <button class="btn" onclick="send('buy')">ОФОРМИТЬ</button>
-        </div>
-
-        <div id="page-sell" class="card" style="display:none">
-            <h2 style="margin:0; color:#ff9900">💸 Продажа Gold</h2>
-            <input type="number" id="in-sell" placeholder="Количество Gold" oninput="calc('sell')">
-            <div class="res-text" id="out-sell">0 ₽</div>
-            <div class="hint">Вам нужно выставить скин на: <b id="market-price">0</b> G<br>(учитывая комиссию 20%)</div>
-            <button class="btn" onclick="send('sell')">ПРОДАТЬ</button>
-        </div>
-
-        <div id="page-prof" class="card" style="display:none">
-            <h2>👤 Профиль</h2>
-            <p id="u-id">ID: ...</p>
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <div>📦 Куплено:<br><b id="u-buy">0 G</b></div>
-                <div>💰 Продано:<br><b id="u-sell">0 G</b></div>
-            </div>
-            <div class="ref-card">
-                🎁 <b>Реферальная система</b><br>
-                <span style="font-size:12px; color:#aaa;">Пригласи друга и получи +25G к следующему заказу!</span>
-                <input type="text" id="ref-link" readonly onclick="this.select()">
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        const uid = tg.initDataUnsafe.user?.id || "Unknown";
-        document.getElementById('u-id').innerText = "ID: " + uid;
-        document.getElementById('ref-link').value = "https://t.me/@vo1dshop_bot?start=" + uid;
-
-        function tab(t) {
-            ['buy','sell','prof'].forEach(p => document.getElementById('page-'+p).style.display = p===t?'block':'none');
-            ['buy','sell','prof'].forEach(p => document.getElementById('tab-'+p).classList.toggle('active', p===t));
-            document.getElementById('bdy').className = t + '-page';
-        }
-
-        function calc(t) {
-            const v = document.getElementById('in-'+t).value;
-            if(t==='buy') document.getElementById('out-buy').innerText = Math.round(v * 0.55) + " ₽";
-            else {
-                document.getElementById('out-sell').innerText = Math.round(v * 0.45) + " ₽";
-                document.getElementById('market-price').innerText = Math.round(v * 1.25); // Выставляем на 25% больше, чтобы после -20% пришло ровно v
+    // Эта функция — сердце отправки
+    function send(type) {
+        try {
+            const amt = document.getElementById('in-' + type).value;
+            
+            if (!amt || amt < 100) {
+                tg.showAlert("Минимальная сумма — 100 Gold");
+                return;
             }
-        }
 
-        function send(type) {
-            const amt = document.getElementById('in-'+type).value;
-            if(amt < 100) return tg.showAlert("Минимум 100G!");
-            tg.sendData(JSON.stringify({type, amt}));
+            const data = JSON.stringify({
+                type: type,
+                amt: amt
+            });
+
+            // ВАЖНО: Проверяем, разрешает ли Телеграм отправку
+            tg.sendData(data); 
+            
+            // Если код дошел сюда, значит данные улетели
             tg.close();
+        } catch (e) {
+            alert("Ошибка отправки: " + e.message);
         }
-    </script>
-</body>
-</html>
+    }
+    
+    // Функция для вкладок
+    function tab(t) {
+        ['buy','sell','prof'].forEach(p => document.getElementById('page-'+p).style.display = p===t?'block':'none');
+        ['buy','sell','prof'].forEach(p => document.getElementById('tab-'+p).classList.toggle('active', p===t));
+        document.getElementById('bdy').className = t + '-page';
+    }
+</script>
