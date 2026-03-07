@@ -71,7 +71,7 @@
         tg.expand();
         const uid = tg.initDataUnsafe.user?.id || "Unknown";
         document.getElementById('u-id').innerText = "ID: " + uid;
-        document.getElementById('ref-link').value = "https://t.me/твой_бот?start=" + uid;
+        document.getElementById('ref-link').value = "https://t.me/@vo1dshop_bot?start=" + uid;
 
         function tab(t) {
             ['buy','sell','prof'].forEach(p => document.getElementById('page-'+p).style.display = p===t?'block':'none');
