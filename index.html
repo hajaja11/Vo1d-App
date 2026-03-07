@@ -5,57 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --acc: #ff00ff; --bg: #0b0b0b; }
-        body { font-family: sans-serif; background: var(--bg); color: white; padding: 20px; text-align: center; }
-        .card { background: #1a1a1a; padding: 25px; border-radius: 24px; border: 1px solid #333; }
-        input { width: 100%; padding: 15px; margin: 15px 0; border-radius: 12px; border: 1px solid #444; background: #000; color: white; box-sizing: border-box; font-size: 18px; }
-        .btn { width: 100%; padding: 18px; border-radius: 15px; border: none; background: var(--acc); color: white; font-weight: bold; font-size: 16px; cursor: pointer; }
+        :root { --bg: #0b0b0b; --text: #ffffff; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; transition: 0.3s; }
+        
+        /* Темы */
+        .buy-theme { --acc: #ff00ff; background: linear-gradient(135deg, #2d0036 0%, #0b0b0b 100%); }
+        .sell-theme { --acc: #ff9900; background: linear-gradient(135deg, #331a00 0%, #0b0b0b 100%); }
+        .prof-theme { --acc: #444444; background: #1a1a1a; }
+
+        .nav { display: flex; gap: 8px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 16px; margin-bottom: 20px; }
+        .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: none; color: #666; font-weight: bold; }
+        .nav-btn.active { background: var(--acc); color: white; }
+
+        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 20px; border-radius: 24px; backdrop-filter: blur(10px); }
+        input { width: 100%; box-sizing: border-box; padding: 16px; margin: 12px 0; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: white; font-size: 16px; outline: none; }
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 16px; background: var(--acc); color: white; font-weight: 800; font-size: 16px; margin-top: 10px; cursor: pointer; }
+        .res-text { font-size: 24px; font-weight: 900; color: var(--acc); margin: 15px 0; text-align: center; }
     </style>
 </head>
-<body>
-    <div class="card">
-        <h2>💎 Купить Gold</h2>
-        <input type="number" id="amt" placeholder="Количество">
-        <button class="btn" onclick="sendOrder()">ОФОРМИТЬ ЗАКАЗ</button>
-        <p id="status" style="font-size: 12px; color: #888; margin-top: 15px;"></p>
+<body class="buy-theme" id="bdy">
+    <div class="nav">
+        <button id="t-buy" class="nav-btn active" onclick="setTab('buy')">КУПИТЬ</button>
+        <button id="t-sell" class="nav-btn" onclick="setTab('sell')">ПРОДАТЬ</button>
+        <button id="t-prof" class="nav-btn" onclick="setTab('prof')">ПРОФИЛЬ</button>
+    </div>
+
+    <div id="p-buy" class="card">
+        <h2 style="color:#ff00ff">💎 Покупка Gold</h2>
+        <input type="number" id="i-buy" placeholder="Сколько Gold?" oninput="calc('buy')">
+        <div class="res-text" id="o-buy">0 ₽</div>
+        <button class="btn" onclick="process('buy')">ОПЛАТИТЬ КАРТОЙ</button>
+    </div>
+
+    <div id="p-sell" class="card" style="display:none">
+        <h2 style="color:#ff9900">💸 Продажа Gold</h2>
+        <input type="number" id="i-sell" placeholder="Сколько Gold?" oninput="calc('sell')">
+        <div class="res-text" id="o-sell">Вы получите: 0 ₽</div>
+        <div style="font-size:12px; color:#888; text-align:center">Выставляйте скин за: <b id="m-price">0</b> G</div>
+        <button class="btn" style="background:#ff9900" onclick="process('sell')">ВЫСТАВИТЬ ЛОТ</button>
+    </div>
+
+    <div id="p-prof" class="card" style="display:none">
+        <h2>👤 Профиль</h2>
+        <p id="u-id">ID: ...</p>
+        <div style="display:flex; justify-content:space-between">
+            <span>Куплено: <b id="st-buy">0G</b></span>
+            <span>Продано: <b id="st-sell">0G</b></span>
+        </div>
+        <div style="margin-top:20px; font-size:12px; border-top:1px solid #333; padding-top:10px">
+            🎁 Реферал: +25G к заказу за друга!<br>
+            <code>t.me/твой_бот?start=ID</code>
+        </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
+        document.getElementById('u-id').innerText = "ID: " + (tg.initDataUnsafe.user?.id || "000");
 
-        async function sendOrder() {
-            const val = document.getElementById('amt').value;
-            const status = document.getElementById('status');
-            if (!val || val < 100) return alert("Минимум 100G");
+        function setTab(t) {
+            ['buy','sell','prof'].forEach(p => document.getElementById('p-'+p).style.display = p===t?'block':'none');
+            ['buy','sell','prof'].forEach(p => document.getElementById('t-'+p).classList.toggle('active', p===t));
+            document.getElementById('bdy').className = t + '-theme';
+        }
 
-            status.innerText = "⏳ Соединение с сервером...";
+        function calc(t) {
+            const v = document.getElementById('i-'+t).value;
+            if(t==='buy') document.getElementById('o-buy').innerText = Math.round(v * 0.55) + " ₽";
+            else {
+                document.getElementById('o-sell').innerText = "Вы получите: " + Math.round(v * 0.45) + " ₽";
+                document.getElementById('m-price').innerText = Math.round(v * 1.25);
+            }
+        }
 
-            // Собираем данные для твоего Воркера
-            const orderData = {
-                method: "direct_order", // Пометка, что это не обычное сообщение
-                user_id: tg.initDataUnsafe.user?.id,
-                amt: val,
-                type: "buy"
-            };
+        async function process(type) {
+            const amt = document.getElementById('i-'+type).value;
+            if(amt < 100) return alert("Минимум 100G");
 
-            try {
-                // ОТПРАВЛЯЕМ НАПРЯМУЮ В ТВОЙ WORKER
-                // (Замени URL ниже на свой, если он отличается)
-                const response = await fetch('https://vo1dapp.5487n7z82j.workers.dev', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(orderData)
-                });
+            // Отправляем данные админу в фоне
+            await fetch('https://vo1dapp.5487n7z82j.workers.dev', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    method: "direct_order",
+                    user_id: tg.initDataUnsafe.user?.id,
+                    amt: amt,
+                    type: type
+                })
+            });
 
-                if (response.ok) {
-                    status.innerText = "✅ Заказ принят! Закрываем...";
-                    setTimeout(() => tg.close(), 1000);
-                } else {
-                    status.innerText = "❌ Ошибка сервера. Попробуй еще раз.";
-                }
-            } catch (e) {
-                status.innerText = "❌ Ошибка сети: " + e.message;
+            if(type === 'buy') {
+                // Редирект на Т-Банк для оплаты
+                window.location.href = "https://www.tbank.ru/cf/76uMXuTIIQY";
+            } else {
+                tg.showAlert("Запрос отправлен! Ожидайте скин в ЛС бота.");
+                tg.close();
             }
         }
     </script>
