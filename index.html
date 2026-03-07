@@ -6,105 +6,71 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --text: #ffffff; --sub: rgba(255,255,255,0.6); }
-        .buy-theme { background: linear-gradient(135deg, #2d0036 0%, #000000 100%); --acc: #ff00ff; }
-        .sell-theme { background: linear-gradient(135deg, #3d1a00 0%, #000000 100%); --acc: #ff9900; }
-        .prof-theme { background: linear-gradient(135deg, #1c1c1c 0%, #000000 100%); --acc: #8e8e93; }
+        body { font-family: -apple-system, system-ui, sans-serif; color: var(--text); margin: 0; padding: 16px; background: #000; min-height: 100vh; padding-bottom: 110px; }
+        .buy-theme { background: linear-gradient(135deg, #2d0036 0%, #000 100%); --acc: #ff00ff; }
+        .sell-theme { background: linear-gradient(135deg, #3d1a00 0%, #000 100%); --acc: #ff9900; }
+        .prof-theme { background: #111; --acc: #8e8e93; }
 
-        body { font-family: -apple-system, system-ui, sans-serif; color: var(--text); margin: 0; padding: 16px; transition: 0.5s; min-height: 100vh; padding-bottom: 110px; }
-        .card { background: rgba(255,255,255,0.06); border-radius: 28px; padding: 22px; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 16px; }
+        .card { background: rgba(255,255,255,0.06); border-radius: 24px; padding: 20px; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 16px; }
+        input { width: 100%; box-sizing: border-box; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: white; outline: none; }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 16px; background: var(--acc); color: white; font-weight: 700; cursor: pointer; }
         
-        h2 { font-size: 22px; font-weight: 800; margin: 0 0 15px 0; }
-        input { width: 100%; box-sizing: border-box; padding: 16px; margin: 8px 0; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white; font-size: 16px; outline: none; }
-        
-        .btn { width: 100%; padding: 18px; border: none; border-radius: 18px; background: var(--acc); color: white; font-weight: 800; font-size: 16px; cursor: pointer; }
-        
-        .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-        .m-btn { padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--sub); text-align: center; font-size: 12px; cursor: pointer; }
-        .m-btn.active { border-color: var(--acc); color: white; background: rgba(255,255,255,0.1); }
-
-        .file-box { border: 2px dashed rgba(255,255,255,0.2); border-radius: 18px; padding: 15px; text-align: center; margin: 10px 0; font-size: 14px; }
+        .file-box { border: 2px dashed rgba(255,255,255,0.2); border-radius: 16px; padding: 15px; text-align: center; margin: 10px 0; cursor: pointer; }
         #preview { width: 100%; border-radius: 10px; margin-top: 10px; display: none; }
 
-        .nav { position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.6); backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding: 12px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.1); }
-        .nav-btn { background: none; border: none; color: var(--sub); font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .nav { position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.8); display: flex; justify-content: space-around; padding: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        .nav-btn { background: none; border: none; color: var(--sub); font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .nav-btn.active { color: white; }
 
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .stat-box { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 15px; text-align: center; }
-        
-        #doc-modal { display: none; position: fixed; inset: 0; background: #000; z-index: 1000; padding: 40px 20px; overflow-y: auto; }
-        .doc-item { color: var(--sub); font-size: 13px; text-decoration: underline; margin-top: 10px; cursor: pointer; }
-        .hist-item { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 15px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .stat-box { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; text-align: center; }
+        .hist-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; margin-bottom: 6px; display: flex; justify-content: space-between; font-size: 14px; }
     </style>
 </head>
 <body class="buy-theme" id="bdy">
 
     <div id="p-buy" class="card">
         <h2>💎 Купить Gold</h2>
-        <p style="font-size:12px; color:var(--sub); margin-bottom:10px">⚠️ Комиссия рынка 20% лежит на покупателе.</p>
         <input type="number" id="i-buy" placeholder="Кол-во Gold" oninput="calc('buy')">
-        
-        <div class="method-grid">
-            <div class="m-btn active" id="m-sbp" onclick="setMethod('sbp')">💳 СБП</div>
-            <div class="m-btn" id="m-ton" onclick="setMethod('ton')">💎 TON (+10%)</div>
-        </div>
-
         <div class="file-box" onclick="document.getElementById('file-input').click()">
-            <span id="file-label">📸 Прикрепите скрин лота</span>
+            <span id="file-label">📸 Скриншот лота</span>
             <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFile(this)">
             <img id="preview">
         </div>
-
         <div style="text-align:center; margin:15px 0">
-            <div style="font-size:32px; font-weight:900; color:#ff00ff" id="o-buy">0 ₽</div>
-            <div style="font-size:14px; color:var(--sub)" id="o-ton-sub"></div>
+            <div style="font-size:28px; font-weight:800; color:#ff00ff" id="o-buy">0 ₽</div>
+            <div style="font-size:11px; color:var(--sub); margin-top:5px">Оплата по СБП. Комиссия рынка на вас.</div>
         </div>
-        <button class="btn" onclick="process('buy')">ОФОРМИТЬ</button>
-        
-        <div class="doc-item" onclick="showDoc('offer')">Публичная оферта</div>
-        <div class="doc-item" onclick="showDoc('policy')">Политика конфиденциальности</div>
+        <button class="btn" onclick="process('buy')">ОФОРМИТЬ ЗАКАЗ</button>
+        <div style="margin-top:15px; font-size:12px; color:var(--sub); text-align:center">
+            <span onclick="sendDoc('offer')">Оферта</span> | <span onclick="sendDoc('policy')">Приватность</span>
+        </div>
     </div>
 
     <div id="p-sell" class="card" style="display:none">
         <h2>💸 Продать Gold</h2>
-        <p style="font-size:12px; color:var(--sub)">⚠️ Комиссия 20% рынка на вас. Нужно будеь купить скин на 20% больше продажи..</p>
         <input type="number" id="i-sell" placeholder="Кол-во Gold" oninput="calc('sell')">
-        
-        <input type="text" id="s-bank" placeholder="Карта и Название банка">
-        <input type="text" id="s-ton" placeholder="Ваш TON кошелек">
-
+        <input type="text" id="s-bank" placeholder="Номер карты и название банка">
         <div style="text-align:center; margin:15px 0">
-            <div style="font-size:24px; font-weight:900; color:#ff9900" id="o-sell">Вы получите: 0 ₽</div>
-            <div style="font-size:12px; color:var(--sub)" id="o-sell-sub">Нужно купить предмет за: 0 G</div>
+            <div style="font-size:24px; font-weight:800; color:#ff9900" id="o-sell">Вы получите: 0 ₽</div>
+            <div style="font-size:11px; color:var(--sub); margin-top:5px">Выставляете на 20% больше.</div>
         </div>
         <button class="btn" onclick="process('sell')">ПРОДАТЬ</button>
     </div>
 
     <div id="p-prof" style="display:none">
         <div class="card" style="text-align:center">
-            <div id="u-ava-container" style="width:80px; height:80px; margin:0 auto 15px; border-radius:50%; border:3px solid var(--acc); overflow:hidden; background:#222">
-                <img id="u-ava-img" src="" style="width:100%; height:100%; object-fit:cover; display:none">
-                <span id="u-ava-stub" style="font-size:40px; line-height:80px">👤</span>
-            </div>
-            <h3 id="u-name" style="margin:0 0 5px 0">...</h3>
-            <p id="u-username" style="margin:0; color:var(--sub); font-size:14px">@...</p>
-            <p id="u-id" style="margin:5px 0 0 0; color:var(--sub); font-size:12px; opacity:0.7">ID: ...</p>
-            
-            <div class="stats-grid">
-                <div class="stat-box"><div style="color:#ff00ff;font-weight:900" id="s-bought">0G</div><div style="font-size:10px">КУПЛЕНО</div></div>
-                <div class="stat-box"><div style="color:#ff9900;font-weight:900" id="s-sold">0G</div><div style="font-size:10px">ПРОДАНО</div></div>
+            <h3 id="u-name">...</h3>
+            <p id="u-info" style="color:var(--sub); font-size:12px; margin-top:-10px"></p>
+            <div class="stats">
+                <div class="stat-box"><div style="color:#ff00ff;font-weight:800" id="s-bought">0G</div><div style="font-size:9px">КУПЛЕНО</div></div>
+                <div class="stat-box"><div style="color:#ff9900;font-weight:800" id="s-sold">0G</div><div style="font-size:9px">ПРОДАНО</div></div>
             </div>
         </div>
         <div class="card">
-            <h4>История операций</h4>
+            <h4>История</h4>
             <div id="history-list"></div>
         </div>
-    </div>
-
-    <div id="doc-modal">
-        <button class="btn" onclick="this.parentElement.style.display='none'" style="margin-bottom:20px">ЗАКРЫТЬ</button>
-        <h2 id="doc-title"></h2>
-        <div id="doc-content" style="line-height:1.6; color:var(--sub); white-space: pre-line;"></div>
     </div>
 
     <nav class="nav">
@@ -115,74 +81,48 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand();
         const user = tg.initDataUnsafe.user || {id: 0, first_name: 'User', username: 'none'};
-        let method = 'sbp';
         let base64Image = null;
 
-        // Инициализация данных профиля
-        document.getElementById('u-name').innerText = user.first_name;
-        document.getElementById('u-username').innerText = user.username ? "@" + user.username : "";
-        document.getElementById('u-id').innerText = "ID: " + user.id;
-        if(user.photo_url) {
-            document.getElementById('u-ava-img').src = user.photo_url;
-            document.getElementById('u-ava-img').style.display = 'block';
-            document.getElementById('u-ava-stub').style.display = 'none';
-        }
-
-        function setMethod(m) {
-            method = m;
-            document.getElementById('m-sbp').classList.toggle('active', m==='sbp');
-            document.getElementById('m-ton').classList.toggle('active', m==='ton');
-            calc('buy');
-        }
-
         function handleFile(input) {
-            const file = input.files[0];
             const reader = new FileReader();
             reader.onload = (e) => {
                 base64Image = e.target.result;
                 document.getElementById('preview').src = base64Image;
                 document.getElementById('preview').style.display = 'block';
-                document.getElementById('file-label').innerText = "✅ Скриншот выбран";
+                document.getElementById('file-label').style.display = 'none';
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(input.files[0]);
         }
 
         function calc(t) {
             const v = parseFloat(document.getElementById('i-'+t).value) || 0;
-            if(t==='buy') {
-                const rub = Math.round(v * 0.55);
-                document.getElementById('o-buy').innerText = rub + " ₽";
-                if(method === 'ton') {
-                    const tonPrice = (rub / 99 * 1.1).toFixed(2);
-                    document.getElementById('o-ton-sub').innerText = "≈ " + tonPrice + " TON";
-                } else document.getElementById('o-ton-sub').innerText = "";
-            } else {
-                document.getElementById('o-sell').innerText = "Вы получите: " + Math.round(v * 0.45) + " ₽";
-                document.getElementById('o-sell-sub').innerText = "Нужно выставить предмет на: " + Math.round(v * 1.2) + " G";
-            }
+            if(t==='buy') document.getElementById('o-buy').innerText = Math.round(v * 0.55) + " ₽";
+            else document.getElementById('o-sell').innerText = "Вы получите: " + Math.round(v * 0.45) + " ₽";
         }
 
         async function process(type) {
             const amt = document.getElementById('i-'+type).value;
             if(!amt || amt < 100) return tg.showAlert("Минимум 100 Gold");
-            
             let payload = { method: "direct_order", user_id: user.id, amt: amt, type: type };
             if(type === 'buy') {
-                if(!base64Image) return tg.showAlert("Прикрепите скриншот!");
+                if(!base64Image) return tg.showAlert("Нужен скриншот!");
                 payload.image = base64Image;
-                payload.pay_method = method;
             } else {
                 payload.bank = document.getElementById('s-bank').value;
-                payload.ton_wallet = document.getElementById('s-ton').value;
-                if(!payload.bank && !payload.ton_wallet) return tg.showAlert("Введите реквизиты!");
+                if(!payload.bank) return tg.showAlert("Введите реквизиты!");
             }
-
-            tg.MainButton.show();
-            tg.MainButton.setText("ОТПРАВКА...");
+            tg.MainButton.show(); tg.MainButton.setText("ОФОРМЛЕНИЕ...");
             await fetch('https://vo1dminiapp.5487n7z82j.workers.dev', { method: 'POST', body: JSON.stringify(payload) });
             tg.close();
+        }
+
+        function sendDoc(type) {
+            fetch('https://vo1dminiapp.5487n7z82j.workers.dev', { 
+                method: 'POST', 
+                body: JSON.stringify({ method: "send_doc", user_id: user.id, doc_type: type }) 
+            });
+            tg.showAlert("Текст отправлен вам в чат с ботом");
         }
 
         function setTab(t) {
@@ -196,10 +136,11 @@
 
         async function loadData() {
             const res = await fetch('https://vo1dminiapp.5487n7z82j.workers.dev', {
-                method: 'POST',
-                body: JSON.stringify({ method: "get_user_data", user_id: user.id })
+                method: 'POST', body: JSON.stringify({ method: "get_user_data", user_id: user.id })
             });
             const data = await res.json();
+            document.getElementById('u-name').innerText = user.first_name;
+            document.getElementById('u-info').innerText = `@${user.username || ''} | ID: ${user.id}`;
             document.getElementById('s-bought').innerText = (data.stats.bought || 0) + "G";
             document.getElementById('s-sold').innerText = (data.stats.sold || 0) + "G";
             document.getElementById('history-list').innerHTML = data.history.map(h => `
@@ -208,47 +149,6 @@
                     <div style="color:${h.status==='Completed'?'#00ff88':'#ffcc00'}">${h.status==='Completed'?'ВЫПОЛНЕНО':'В ПРОЦЕССЕ'}</div>
                 </div>
             `).join('') || "История пуста";
-        }
-
-        function showDoc(t) {
-            const m = document.getElementById('doc-modal');
-            m.style.display = 'block';
-            if(t === 'offer') {
-                document.getElementById('doc-title').innerText = "Публичная оферта";
-                document.getElementById('doc-content').innerText = "ПУБЛИЧНАЯ ОФЕРТА VO1D STORE
-1. ОБЩИЕ ПОЛОЖЕНИЯ
-1.1. Данный документ является официальным предложением (публичной офертой) проекта VO1D STORE (далее — «Исполнитель») и содержит все существенные условия по оказанию услуг купли-продажи и обмена игровых ценностей (в том числе игровой валюты «Gold»).
-1.2. Акцептом (принятием) данной оферты является нажатие Пользователем кнопок «Купить» или «Продать» в интерфейсе Mini App.
-2. ПРЕДМЕТ ДОГОВОРА
-2.1. Исполнитель обязуется обеспечить передачу игровых ценностей или денежных средств Пользователю после подтверждения оплаты, согласно выбранному тарифу и направлению сделки.
-2.2. Пользователь понимает и соглашается, что Исполнитель не является аффилированным лицом разработчиков игры и действует как независимый посредник.
-3. УСЛОВИЯ СДЕЛОК
-3.1. Комиссия: Внутриигровая комиссия (комиссия рынка), составляющая 20%, всегда лежит на стороне Пользователя (Покупателя или Продавца), если иное не указано в деталях сделки.
-3.2. Сроки: Сделки обрабатываются в ручном или полуавтоматическом режиме. Максимальный срок выполнения заявки — 24 часа, однако стандартное время составляет от 5 до 60 минут.
-3.3. Реквизиты: Пользователь несет полную ответственность за корректность указанных реквизитов (номер карты, TON-кошелек, скриншот лота). Ошибка в реквизитах может привести к безвозвратной потере средств.
-4. ПРАВИЛА ОПЛАТЫ
-4.1. При оплате через СБП, Пользователь обязан перевести точную сумму, указанную в боте.
-4.2. При оплате в TON, расчет производится по внутреннему курсу сервиса с учетом технической комиссии сети и волатильности.
-5. ОТВЕТСТВЕННОСТЬ И РИСКИ
-5.1. Пользователь осознает, что любые операции с игровой валютой через сторонние сервисы могут повлечь санкции со стороны администрации игры (блокировка аккаунта, обнуление баланса). Исполнитель не несет ответственности за подобные последствия.
-5.2. Возврат средств невозможен после того, как игровая валюта или денежная выплата была отправлена по реквизитам, указанным Пользователем.";
-            } else {
-                document.getElementById('doc-title').innerText = "Политика конфиденциальности";
-                document.getElementById('doc-content').innerText = "ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ VO1D STORE
-1. КАКИЕ ДАННЫЕ МЫ СОБИРАЕМ
-1.1. Идентификация: Мы получаем ваш общедоступный Telegram ID, имя и username для привязки заказов к вашему аккаунту.
-1.2. Платежные данные: Мы временно храним предоставленные вами реквизиты (номер карты или TON-кошелек) исключительно для осуществления выплаты по вашей заявке.
-1.3. Медиа-файлы: Загруженные скриншоты лотов используются только для подтверждения факта выставления предмета на рынок.
-2. КАК МЫ ИСПОЛЬЗУЕМ ДАННЫЕ
-2.1. Данные используются только для корректного выполнения ваших заказов и ведения истории операций в вашем профиле.
-2.2. Мы не передаем вашу личную информацию, реквизиты или историю сделок третьим лицам.
-3. ХРАНЕНИЕ И ЗАЩИТА
-3.1. Все данные хранятся в защищенном облачном хранилище (Cloudflare KV) и доступны только администратору сервиса.
-3.2. История заказов в Mini App доступна только вам при авторизации через ваш Telegram-аккаунт.
-4. ВАШИ ПРАВА
-4.1. Вы имеете право запросить удаление вашей истории операций, обратившись в поддержку.
-4.2. Использование Mini App означает ваше полное согласие с данными условиями сбора и обработки информации.";
-            }
         }
     </script>
 </body>
