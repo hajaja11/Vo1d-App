@@ -2,74 +2,96 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --main: #0088cc; --bg: #1a1a1a; --card: #2a2a2a; --text: #ffffff; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
-        .card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #333; margin-bottom: 15px; }
-        .nav { display: flex; gap: 8px; margin-bottom: 15px; background: #333; padding: 4px; border-radius: 12px; }
-        .nav-btn { flex: 1; padding: 10px; border-radius: 10px; border: none; background: none; color: #aaa; cursor: pointer; transition: 0.3s; }
-        .nav-btn.active { background: var(--main); color: white; }
-        input { width: 100%; box-sizing: border-box; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #1a1a1a; color: white; font-size: 16px; }
-        .btn { background: var(--main); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; font-size: 16px; margin-top: 10px; }
-        .info { font-size: 14px; color: #aaa; margin-top: 5px; text-align: left; }
-        .price-tag { font-size: 20px; font-weight: bold; color: var(--main); margin: 10px 0; }
+        :root { --bg: #0b0b0b; --text: #ffffff; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; overflow-x: hidden; transition: background 0.4s; }
+        
+        .buy-page { --acc: #ff00ff; --grad: linear-gradient(135deg, #2d0036 0%, #0b0b0b 100%); }
+        .sell-page { --acc: #ff9900; --grad: linear-gradient(135deg, #331a00 0%, #0b0b0b 100%); }
+        .prof-page { --acc: #444444; --grad: linear-gradient(135deg, #1a1a1a 0%, #0b0b0b 100%); }
+
+        .container { background: var(--grad); min-height: 100vh; position: fixed; top:0; left:0; right:0; padding: 15px; }
+        .nav { display: flex; gap: 8px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 16px; margin-bottom: 20px; }
+        .nav-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: none; color: #666; font-weight: 600; font-size: 13px; transition: 0.3s; }
+        .nav-btn.active { background: var(--acc); color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+
+        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 20px; border-radius: 24px; backdrop-filter: blur(10px); }
+        input { width: 100%; box-sizing: border-box; padding: 16px; margin: 12px 0; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: white; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--acc); }
+
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 16px; background: var(--acc); color: white; font-weight: 800; font-size: 16px; margin-top: 10px; cursor: pointer; }
+        .res-text { font-size: 24px; font-weight: 900; color: var(--acc); margin: 15px 0; text-align: center; }
+        .hint { font-size: 12px; color: #888; text-align: center; margin-top: 5px; }
+        
+        .ref-card { background: #111; padding: 15px; border-radius: 18px; margin-top: 15px; border-left: 4px solid #ff00ff; }
     </style>
 </head>
-<body>
-    <div class="nav">
-        <button id="buy-tab" class="nav-btn active" onclick="show('buy')">Купить</button>
-        <button id="sell-tab" class="nav-btn" onclick="show('sell')">Продать</button>
-        <button id="prof-tab" class="nav-btn" onclick="show('prof')">Профиль</button>
-    </div>
+<body class="buy-page" id="bdy">
+    <div class="container">
+        <div class="nav">
+            <button id="tab-buy" class="nav-btn active" onclick="tab('buy')">КУПИТЬ</button>
+            <button id="tab-sell" class="nav-btn" onclick="tab('sell')">ПРОДАТЬ</button>
+            <button id="tab-prof" class="nav-btn" onclick="tab('prof')">ПРОФИЛЬ</button>
+        </div>
 
-    <div id="buy-box" class="card">
-        <h3>🛒 Покупка Gold</h3>
-        <input type="number" id="buy-amt" placeholder="Количество Gold" oninput="calc()">
-        <div class="info">Курс: 0.55₽ за 1G</div>
-        <div class="price-tag" id="buy-price">0 ₽</div>
-        <input type="text" id="promo" placeholder="Промокод (если есть)">
-        <button class="btn" onclick="sendOrder('buy')">Оформить заказ</button>
-    </div>
+        <div id="page-buy" class="card">
+            <h2 style="margin:0; color:#ff00ff">💎 Покупка Gold</h2>
+            <input type="number" id="in-buy" placeholder="Введите количество" oninput="calc('buy')">
+            <div class="res-text" id="out-buy">0 ₽</div>
+            <button class="btn" onclick="send('buy')">ОФОРМИТЬ</button>
+        </div>
 
-    <div id="sell-box" class="card" style="display:none">
-        <h3>💸 Продажа Gold</h3>
-        <input type="number" id="sell-amt" placeholder="Количество Gold">
-        <div class="info">Наш курс скупки: 0.45₽</div>
-        <button class="btn" onclick="sendOrder('sell')" style="background: #cc8800;">Продать</button>
-    </div>
+        <div id="page-sell" class="card" style="display:none">
+            <h2 style="margin:0; color:#ff9900">💸 Продажа Gold</h2>
+            <input type="number" id="in-sell" placeholder="Количество Gold" oninput="calc('sell')">
+            <div class="res-text" id="out-sell">0 ₽</div>
+            <div class="hint">Вам нужно выставить скин на: <b id="market-price">0</b> G<br>(учитывая комиссию 20%)</div>
+            <button class="btn" onclick="send('sell')">ПРОДАТЬ</button>
+        </div>
 
-    <div id="prof-box" class="card" style="display:none">
-        <h3>👤 Профиль</h3>
-        <p>Ваш ранг: <b>Legend 💎</b></p>
-        <p>Скидка: <b>10%</b></p>
+        <div id="page-prof" class="card" style="display:none">
+            <h2>👤 Профиль</h2>
+            <p id="u-id">ID: ...</p>
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <div>📦 Куплено:<br><b id="u-buy">0 G</b></div>
+                <div>💰 Продано:<br><b id="u-sell">0 G</b></div>
+            </div>
+            <div class="ref-card">
+                🎁 <b>Реферальная система</b><br>
+                <span style="font-size:12px; color:#aaa;">Пригласи друга и получи +25G к следующему заказу!</span>
+                <input type="text" id="ref-link" readonly onclick="this.select()">
+            </div>
+        </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.ready();
         tg.expand();
+        const uid = tg.initDataUnsafe.user?.id || "Unknown";
+        document.getElementById('u-id').innerText = "ID: " + uid;
+        document.getElementById('ref-link').value = "https://t.me/твой_бот?start=" + uid;
 
-        function show(tab) {
-            document.getElementById('buy-box').style.display = tab === 'buy' ? 'block' : 'none';
-            document.getElementById('sell-box').style.display = tab === 'sell' ? 'block' : 'none';
-            document.getElementById('prof-box').style.display = tab === 'prof' ? 'block' : 'none';
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tab + '-tab').classList.add('active');
+        function tab(t) {
+            ['buy','sell','prof'].forEach(p => document.getElementById('page-'+p).style.display = p===t?'block':'none');
+            ['buy','sell','prof'].forEach(p => document.getElementById('tab-'+p).classList.toggle('active', p===t));
+            document.getElementById('bdy').className = t + '-page';
         }
 
-        function calc() {
-            const amt = document.getElementById('buy-amt').value;
-            document.getElementById('buy-price').innerText = (amt * 0.55).toFixed(0) + ' ₽';
+        function calc(t) {
+            const v = document.getElementById('in-'+t).value;
+            if(t==='buy') document.getElementById('out-buy').innerText = Math.round(v * 0.55) + " ₽";
+            else {
+                document.getElementById('out-sell').innerText = Math.round(v * 0.45) + " ₽";
+                document.getElementById('market-price').innerText = Math.round(v * 1.25); // Выставляем на 25% больше, чтобы после -20% пришло ровно v
+            }
         }
 
-        function sendOrder(type) {
-            const amt = type === 'buy' ? document.getElementById('buy-amt').value : document.getElementById('sell-amt').value;
-            const promo = document.getElementById('promo').value;
-            if (!amt || amt < 100) return tg.showAlert("Минимальная сумма — 100 Gold");
-            
-            tg.sendData(JSON.stringify({type, amt, promo}));
+        function send(type) {
+            const amt = document.getElementById('in-'+type).value;
+            if(amt < 100) return tg.showAlert("Минимум 100G!");
+            tg.sendData(JSON.stringify({type, amt}));
             tg.close();
         }
     </script>
