@@ -1,8 +1,14 @@
 diff --git a/index.html b/index.html
-index 1bb34b41c6541cd60805c3aad931712cd8fe69e0..985254c275a279d971e0f5eaa33e67a592b017f8 100644
+index 1bb34b41c6541cd60805c3aad931712cd8fe69e0..6874a8d0df51b4268522175c164850c4fb518a83 100644
 --- a/index.html
 +++ b/index.html
-@@ -5,126 +5,249 @@
+@@ -1,130 +1,254 @@
+-<!DOCTYPE html>
++﻿<!DOCTYPE html>
+ <html>
+ <head>
+     <meta charset="UTF-8">
++    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
      <script src="https://telegram.org/js/telegram-web-app.js"></script>
      <style>
@@ -145,8 +151,8 @@ index 1bb34b41c6541cd60805c3aad931712cd8fe69e0..985254c275a279d971e0f5eaa33e67a5
 +4.2. Использование Mini App означает ваше полное согласие с данными условиями сбора и обработки информации.`
 +            }
 +        };
-+        const tg = window.Telegram?.WebApp;
-+        const user = tg?.initDataUnsafe?.user || {id: 0, first_name: 'User', photo_url: ''};
++        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
++        const user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : {id: 0, first_name: 'User', photo_url: ''};
  
          if(user.photo_url) document.getElementById('u-ava').src = user.photo_url;
          document.getElementById('u-name').innerText = user.first_name;
@@ -191,14 +197,14 @@ index 1bb34b41c6541cd60805c3aad931712cd8fe69e0..985254c275a279d971e0f5eaa33e67a5
 +            const amt = parseInt(amountField.value, 10);
 +
 +            if(!Number.isFinite(amt) || amt < 100) {
-+                return tg?.showAlert ? tg.showAlert('Минимум 100 Gold') : alert('Минимум 100 Gold');
++                return tg && tg.showAlert ? tg.showAlert('Минимум 100 Gold') : alert('Минимум 100 Gold');
 +            }
 +
 +            const payload = { method: 'direct_order', user_id: user.id, amt, type };
 +            if(type === 'sell') {
 +                const bank = document.getElementById('s-bank').value.trim();
 +                if(!bank) {
-+                    return tg?.showAlert ? tg.showAlert('Введите карту или банк для выплаты') : alert('Введите карту или банк для выплаты');
++                    return tg && tg.showAlert ? tg.showAlert('Введите карту или банк для выплаты') : alert('Введите карту или банк для выплаты');
 +                }
 +                payload.bank = bank;
 +            }
@@ -212,13 +218,13 @@ index 1bb34b41c6541cd60805c3aad931712cd8fe69e0..985254c275a279d971e0f5eaa33e67a5
 +
 +                if(!res.ok) throw new Error('bad status');
 +
-+                if(tg?.close) {
++                if(tg && tg.close) {
 +                    tg.close();
 +                } else {
 +                    alert('Заявка отправлена');
 +                }
 +            } catch (e) {
-+                tg?.showAlert ? tg.showAlert('Ошибка отправки заявки. Попробуйте позже.') : alert('Ошибка отправки заявки. Попробуйте позже.');
++                tg && tg.showAlert ? tg.showAlert('Ошибка отправки заявки. Попробуйте позже.') : alert('Ошибка отправки заявки. Попробуйте позже.');
 +            }
          }
  
