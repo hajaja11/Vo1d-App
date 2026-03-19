@@ -1,9 +1,8 @@
+    <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
         // === 1. КОНФИГУРАЦИЯ БАЗЫ ДАННЫХ (КЕЙСЫ И ПРЕДМЕТЫ) ===
-        // Позже мы вынесем это в Cloudflare Worker, пока храним на фронтенде.
-
         const casesConfig = {
             case_economy: {
                 id: 'economy', name: "Осколок Пустоты", price: 50, icon: "📦", color: "#aaa",
@@ -22,7 +21,7 @@
                     { id: "vc_150", type: "currency", icon: "🪙", name: "150 VC (Окуп)", value: 150, chance: 15 },
                     { id: "zero_fee", type: "consumable", icon: "🎟️", name: "Zero Fee", chance: 10 },
                     { id: "vip_1d", type: "consumable", icon: "👑", name: "VIP 1 День", chance: 4 },
-                    { id: "vc_500", type: "currency", icon: "💰", name: "500 VC (ДЖЕКПОТ)", value: 500, chance: 1 }, // <--- Тот самый джекпот
+                    { id: "vc_500", type: "currency", icon: "💰", name: "500 VC (ДЖЕКПОТ)", value: 500, chance: 1 },
                 ]
             },
             case_elite: {
@@ -37,31 +36,21 @@
             }
         };
 
-        const casesData = Object.values(casesConfig); // Массив для карусели
+        const casesData = Object.values(casesConfig);
 
         // === 2. БАЗА ДАННЫХ ЛОКАЛЬНОГО ИГРОКА ===
-        
         let userData = {
             balance_vc: 1500,
             inventory: [
                 { id: "frame_neon", type: "frame", icon: "🔮", name: "Неон Рамка", color: "#8A2BE2" },
                 { id: "title_novice", type: "title", icon: "🔰", name: "Новичок", color: "var(--accent)" }
             ],
-            equipped: {
-                frame: null,
-                title: null
-            },
+            equipped: { frame: null, title: null },
             isVIP: false
         };
 
-        // Текстовое описание предметов по ID для инвентаря
-        const allItemsDict = {};
-        casesData.forEach(c => c.drops.forEach(d => allItemsDict[d.id] = d));
-
-
         // === 3. СОСТОЯНИЕ И НАВИГАЦИЯ ===
-
-        let currentIdx = 1; // По умолчанию Неоновый бокс
+        let currentIdx = 1; 
         let isSpinning = false;
 
         function nav(pageId, el) { 
@@ -73,11 +62,12 @@
             tg.HapticFeedback.impactOccurred('light'); 
         }
 
-        function toggleWd() { const w = document.getElementById('withdraw-modal'); w.style.display = w.style.display === 'block' ? 'none' : 'block'; }
-
+        function toggleWd() { 
+            const w = document.getElementById('withdraw-modal'); 
+            w.style.display = w.style.display === 'block' ? 'none' : 'block'; 
+        }
 
         // === 4. ЛОГИКА КАРАУСЕЛИ КЕЙСОВ ===
-
         function updateCaseView() {
             const c = casesData[currentIdx];
             document.getElementById('case-title').innerText = c.name;
@@ -95,10 +85,7 @@
             updateCaseView();
         }
 
-
-        // === 5. ЛОГИКА РУЛЕТКИ И СВЯЗЬ С ИНВЕНТАРЕМ (БЭКЕНД ЛОГИКА НА ФРОНТЕНДЕ) ===
-
-        // Функция-генератор выигрыша по шансам (на сервере будет это!)
+        // === 5. ЛОГИКА РУЛЕТКИ И СВЯЗЬ С ИНВЕНТАРЕМ ===
         function generateWinningDrop(caseId) {
             const c = casesConfig[`case_${caseId}`];
             const rand = Math.random() * 100;
@@ -108,15 +95,13 @@
                 currentChance += drop.chance;
                 if (rand < currentChance) return drop;
             }
-            return c.drops[0]; // На всякий случай
+            return c.drops[0]; 
         }
 
         function openCase() {
             if(isSpinning) return;
-            
             const currentCase = casesData[currentIdx];
             
-            // 1. Проверяем баланс
             if(userData.balance_vc < currentCase.price) {
                 tg.showAlert('Не хватает VC! Пополните баланс.');
                 return;
@@ -125,11 +110,9 @@
             isSpinning = true;
             tg.HapticFeedback.impactOccurred('heavy');
             
-            // 2. Списываем баланс VC
             userData.balance_vc -= currentCase.price;
-            updateProfileView(); // Обновляем баланс в профиле сразу
+            updateProfileView(); 
 
-            // Скрываем картинку, показываем рулетку
             document.getElementById('case-display').style.display = 'none';
             document.getElementById('roulette').style.display = 'block';
             document.getElementById('btn-open').style.opacity = '0.5';
@@ -139,24 +122,17 @@
             track.style.transform = 'translateX(0)';
             track.innerHTML = '';
 
-            // 3. ГЕНЕРИРУЕМ ЛЕНТУ РУЛЕТКИ (Правильный алгоритм)
-            
-            // А) Сначала определяем, ЧТО выпадет
             const winningItem = generateWinningDrop(currentCase.id);
             
-            // Б) Формируем массив из 60 предметов
             let rouletteDrops = [];
             for(let i=0; i<60; i++) {
-                // Если это 55-й слот -> ставим туда наш выигрыш
                 if (i === 55) {
                     rouletteDrops.push(winningItem);
                 } else {
-                    // Иначе ставим абсолютно любой случайный предмет из кейса для массы
                     rouletteDrops.push(currentCase.drops[Math.floor(Math.random() * currentCase.drops.length)]);
                 }
             }
             
-            // В) Отрисовываем эту ленту в HTML
             rouletteDrops.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'roulette-item';
@@ -164,57 +140,45 @@
                 track.appendChild(div);
             });
 
-            // Запускаем анимацию прокрутки
             setTimeout(() => {
                 track.style.transition = 'transform 4s cubic-bezier(0.15, 0.9, 0.15, 1)';
-                // Сдвигаемся ровно на 55 блоков (блок+маргин ~90px). 
-                // Высчитываем сдвиг, чтобы 55-й предмет встал по центру pointers
                 const containerWidth = document.getElementById('roulette').offsetWidth;
-                const offset = (55 * 90) - (containerWidth / 2) + 45; // Сдвиг на 55-й предмет
+                const offset = (55 * 90) - (containerWidth / 2) + 45; 
                 track.style.transform = `translateX(-${offset}px)`; 
             }, 50);
 
-            // Показываем выигрыш после остановки
             setTimeout(() => {
                 tg.HapticFeedback.notificationOccurred('success');
                 document.getElementById('win-icon').innerText = winningItem.icon;
                 document.getElementById('win-name').innerText = winningItem.name;
                 document.getElementById('win-modal').style.display = 'flex';
                 
-                // 4. ДОБАВЛЯЕМ ВЫИГРЫШ ИГРОКУ (связь экосистем)
                 if (winningItem.type === 'currency') {
-                    // Плюсуем валюту
                     userData.balance_vc += winningItem.value;
                     tg.showAlert(`Зачислено ${winningItem.value} VC!`);
                 } else {
-                    // Добавляем предмет в инвентарь (если это не джекпот VC)
-                    // Мы не добавляем в инвентарь валютные оукупы
-                    userData.inventory.push({ ...winningItem }); // Пушим копию объекта
+                    userData.inventory.push({ ...winningItem }); 
                 }
                 
-                refreshAllViews(); // Обновляем Инвентарь и Профиль
+                refreshAllViews(); 
 
             }, 4100);
         }
 
         function closeWinModal() {
             document.getElementById('win-modal').style.display = 'none';
-            // Возвращаем интерфейс в исходное состояние
             document.getElementById('case-display').style.display = 'block';
             document.getElementById('roulette').style.display = 'none';
             document.getElementById('btn-open').style.opacity = '1';
             isSpinning = false;
         }
 
-        // === 6. ЛОГИКА ПРОФИЛЯ, ИНВЕНТАРЯ И ЭКИПИРОВКИ ===
-
-        // 1. Отрисовка Инвентаря
+        // === 6. ЛОГИКА ПРОФИЛЯ И ИНВЕНТАРЯ ===
         function renderInventory() {
             const grid = document.querySelector('.inv-grid');
-            grid.innerHTML = ''; // Очищаем старую сетку
+            grid.innerHTML = ''; 
             
             userData.inventory.forEach((item, index) => {
-                // Проверяем, надет ли сейчас этот предмет
                 const isEquipped = (userData.equipped.frame?.id === item.id) || (userData.equipped.title?.id === item.id);
                 const borderStyle = isEquipped ? `border: 2px solid ${item.color || 'var(--btn-green)'}; box-shadow: 0 0 10px ${item.color || 'var(--btn-green)'};` : '';
                 
@@ -227,19 +191,16 @@
                 `;
             });
 
-            // Добиваем пустые слоты до 9 штук для красоты
             for(let i = userData.inventory.length; i < 9; i++) {
                 grid.innerHTML += `<div class="inv-slot"></div>`;
             }
         }
 
-        // 2. Клик по предмету в инвентаре
         function handleItemClick(index) {
             if(isSpinning) return;
             const item = userData.inventory[index];
             
             if (item.type === 'frame' || item.type === 'title') {
-                // Надеваем косметику
                 tg.showConfirm(`Надеть: ${item.name}?`, (confirmed) => {
                     if(confirmed) {
                         userData.equipped[item.type] = item;
@@ -248,11 +209,10 @@
                     }
                 });
             } else if (item.type === 'consumable') {
-                // Используем расходник (VIP или билет)
                 tg.showConfirm(`Активировать: ${item.name}? Он пропадет из инвентаря.`, (confirmed) => {
                     if(confirmed) {
-                        if (item.id.includes('vip')) userData.isVIP = true; // Даем VIP
-                        userData.inventory.splice(index, 1); // Удаляем предмет
+                        if (item.id.includes('vip')) userData.isVIP = true; 
+                        userData.inventory.splice(index, 1); 
                         tg.HapticFeedback.notificationOccurred('success');
                         tg.showAlert(`${item.name} успешно применен!`);
                         refreshAllViews();
@@ -261,11 +221,9 @@
             }
         }
 
-        // 3. Обновление внешнего вида Профиля
         function updateProfileView() {
             document.getElementById('vc-display').innerText = `${userData.balance_vc} VC`;
             
-            // Настройка Титула
             const titleEl = document.getElementById('profile-title');
             if (userData.equipped.title) {
                 titleEl.innerText = `[ ${userData.equipped.title.name} ]`;
@@ -275,7 +233,6 @@
                 titleEl.style.color = "var(--accent)";
             }
 
-            // Настройка Рамки (Аватара)
             const avatarEl = document.getElementById('profile-avatar');
             if (userData.equipped.frame) {
                 avatarEl.style.borderColor = userData.equipped.frame.color;
@@ -285,11 +242,9 @@
                 avatarEl.style.boxShadow = "none";
             }
 
-            // Настройка VIP-Короны
             document.getElementById('vip-badge').style.display = userData.isVIP ? 'block' : 'none';
         }
 
-        // 4. Пополнение баланса (Попап Telegram)
         function showDeposit() {
             tg.showPopup({
                 title: 'Пополнение VC',
@@ -300,13 +255,11 @@
                 ]
             }, (buttonId) => {
                 if (buttonId === 'contact') {
-                    // ЗАМЕНИ НА СВОЙ ТЕЛЕГРАМ ТУТ
-                    tg.openTelegramLink('https://t.me/Durov'); 
+                    tg.openTelegramLink('https://t.me/durov'); 
                 }
             });
         }
 
-        // Функция, которая обновляет всё сразу
         function refreshAllViews() {
             renderInventory();
             updateProfileView();
@@ -314,4 +267,5 @@
         
         // === 7. ИНИЦИАЛИЗАЦИЯ ===
         updateCaseView();
-        refreshAllViews(); // Запускает отрисовку профиля и инвентаря
+        refreshAllViews(); 
+    </script>
