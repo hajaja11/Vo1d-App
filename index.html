@@ -3,141 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SOON...</title>
+    <title>VO1D STORE</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        :root {
+            --bg-grad: linear-gradient(180deg, #30164a 0%, #7e4b68 40%, #d48c48 100%);
+            --accent: #ff9d00;
+            --btn-green: #21C07A;
+            --tab-bg: rgba(20, 10, 30, 0.95);
+            --card-bg: rgba(255, 255, 255, 0.05);
         }
 
-        body {
-            /* Фиолетово-оранжевый градиент */
-            background: linear-gradient(180deg, #30164a 0%, #7e4b68 40%, #d48c48 100%);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-align: center;
-            overflow: hidden;
-            padding: 20px;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg-grad); height: 100vh; color: white; font-family: -apple-system, sans-serif; overflow: hidden; display: flex; flex-direction: column; }
+        
+        .content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; }
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Контейнер для компаса и кольца загрузки */
-        .loader-container {
-            position: relative;
-            width: 150px;
-            height: 150px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 30px;
-        }
+        /* Navigation */
+        nav { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: var(--tab-bg); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: rgba(255,255,255,0.5); font-size: 11px; transition: 0.2s; cursor: pointer; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
 
-        /* Анимация крутящегося кольца загрузки */
-        .spinner {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border: 6px solid rgba(255, 255, 255, 0.15);
-            border-top: 6px solid #ffffff;
-            border-radius: 50%;
-            animation: spin 1.5s linear infinite;
-        }
+        /* Shared Components */
+        .section-title { text-align: center; margin: 10px 0 20px; font-weight: bold; letter-spacing: 1px; }
+        .btn { width: 100%; border: none; padding: 15px; border-radius: 12px; font-weight: bold; color: white; cursor: pointer; }
+        .btn-primary { background: var(--btn-green); }
+        .btn-outline { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        /* Page: Cases */
+        .case-container { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
+        .case-image { width: 180px; height: 180px; background: url('https://via.placeholder.com/180/8A2BE2/FFFFFF?text=NEON+BOX') center/cover; border-radius: 20px; box-shadow: 0 0 30px rgba(138, 43, 226, 0.5); margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .case-price { font-size: 28px; font-weight: bold; margin-bottom: 20px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .drop-carousel { display: flex; gap: 10px; overflow-x: auto; margin-top: 30px; padding-bottom: 10px; }
+        .drop-item { min-width: 60px; height: 60px; background: var(--card-bg); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); font-size: 24px; }
 
-        /* Иконка компаса (эмодзи) с легкой пульсацией */
-        .compass {
-            font-size: 70px;
-            z-index: 2;
-            animation: pulse 2s ease-in-out infinite;
-        }
+        /* Page: P2P */
+        .p2p-filters { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .p2p-card { background: var(--card-bg); border-radius: 16px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(255,255,255,0.05); }
+        .p2p-header { display: flex; justify-content: space-between; align-items: center; }
+        .seller-info { display: flex; align-items: center; gap: 10px; }
+        .seller-avatar { width: 40px; height: 40px; border-radius: 50%; background: #555; border: 2px solid var(--accent); }
+        .seller-name { font-weight: bold; font-size: 14px; }
+        .seller-title { font-size: 10px; color: var(--accent); }
+        .p2p-stats { font-size: 12px; color: #aaa; }
+        .p2p-details { display: flex; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; font-size: 13px; }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-        }
-
-        h1 {
-            font-size: 42px;
-            letter-spacing: 5px;
-            margin-bottom: 15px;
-            font-weight: 700;
-        }
-
-        p.desc {
-            font-size: 16px;
-            opacity: 0.9;
-            margin-bottom: 25px;
-            line-height: 1.4;
-            max-width: 300px;
-        }
-
-        p.hint {
-            font-size: 14px;
-            opacity: 0.6;
-            margin-bottom: 40px;
-            max-width: 280px;
-        }
-
-        .btn-update {
-            background-color: #21C07A;
-            color: white;
-            border: none;
-            padding: 16px 40px;
-            font-size: 18px;
-            font-weight: 600;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 320px;
-            box-shadow: 0 4px 20px rgba(33, 192, 122, 0.4); /* Мягкое свечение кнопки */
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        .btn-update:active {
-            transform: scale(0.96);
-        }
+        /* Page: Inventory */
+        .inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .inv-slot { aspect-ratio: 1; background: var(--card-bg); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); }
+        
+        /* Page: Profile */
+        .user-card { background: var(--card-bg); border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 15px; }
+        .avatar-lg { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--accent); margin: 0 auto 10px; }
+        .balance-block { background: rgba(0,0,0,0.2); border-radius: 15px; padding: 20px; margin-bottom: 15px; text-align: center; }
+        .balance-val { font-size: 32px; font-weight: bold; margin: 5px 0 15px; }
+        .balance-actions { display: flex; gap: 10px; }
+        .withdraw-section { display: none; background: var(--card-bg); border-radius: 15px; padding: 15px; margin-top: 15px; border: 1px solid rgba(255,157,0,0.3); }
+        .calc-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; color: white; margin: 10px 0; outline: none; text-align: center; font-size: 16px; }
+        .file-upload { display: block; background: rgba(255,157,0,0.1); border: 1px dashed var(--accent); padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <audio id="bg-audio" loop>
-        <source src="music.mp3" type="audio/mpeg">
-    </audio>
+    <div class="content">
+        <div id="cases" class="page active">
+            <h2 class="section-title">VO1D STORE</h2>
+            <div class="case-container">
+                <div class="case-image"></div>
+                <div class="case-price">150 VC</div>
+                <button class="btn btn-primary" onclick="tg.showAlert('Ожидание сервера...')">ОТКРЫТЬ КЕЙС</button>
+            </div>
+            <div class="drop-carousel">
+                <div class="drop-item">👑</div>
+                <div class="drop-item">💎</div>
+                <div class="drop-item">🎟️</div>
+                <div class="drop-item">🪙</div>
+                <div class="drop-item">🔮</div>
+            </div>
+        </div>
 
-    <div class="loader-container">
-        <div class="spinner"></div>
-        <div class="compass">🧭</div>
+        <div id="p2p" class="page">
+            <h2 class="section-title">P2P РЫНОК</h2>
+            <div class="p2p-filters">
+                <button class="btn btn-outline" style="width: 48%; padding: 8px;">Мои лоты</button>
+                <button class="btn btn-primary" style="width: 48%; padding: 8px;" onclick="tg.showAlert('Создание лота: 100р')">Продать</button>
+            </div>
+            
+            <div class="p2p-card">
+                <div class="p2p-header">
+                    <div class="seller-info">
+                        <div class="seller-avatar"></div>
+                        <div>
+                            <div class="seller-name">Вася</div>
+                            <div class="seller-title">[ Охотник за Пустотой ]</div>
+                        </div>
+                    </div>
+                    <div class="p2p-stats">⭐ 4.9 (45)</div>
+                </div>
+                <div class="p2p-details">
+                    <span>1000 G</span>
+                    <span>1 G = 0.8 VC</span>
+                    <span style="color: var(--btn-green);">Ком-я: 0%</span>
+                </div>
+                <button class="btn btn-primary" style="padding: 10px;">КУПИТЬ ЗА 800 VC</button>
+            </div>
+        </div>
+
+        <div id="inventory" class="page">
+            <h2 class="section-title">ИНВЕНТАРЬ</h2>
+            <div class="inv-grid">
+                <div class="inv-slot">👑<br><span style="font-size:10px">VIP 1д</span></div>
+                <div class="inv-slot" style="border-color: var(--accent);">🔮<br><span style="font-size:10px">Рамка</span></div>
+                <div class="inv-slot">🎟️<br><span style="font-size:10px">Zero Fee</span></div>
+                <div class="inv-slot"></div>
+                <div class="inv-slot"></div>
+                <div class="inv-slot"></div>
+            </div>
+        </div>
+
+        <div id="profile" class="page">
+            <h2 class="section-title">ПРОФИЛЬ</h2>
+            <div class="user-card">
+                <div class="avatar-lg" style="background: #555;"></div>
+                <h3>Player</h3>
+                <p style="color: var(--accent); font-size: 12px;">[ Новичок ]</p>
+            </div>
+
+            <div class="balance-block">
+                <div style="opacity: 0.6; font-size: 12px;">Баланс Vo1dCoins</div>
+                <div class="balance-val" id="vc-display">0 VC</div>
+                <div class="balance-actions">
+                    <button class="btn btn-primary" onclick="tg.showAlert('Пополнение через админа')">Пополнить</button>
+                    <button class="btn btn-outline" onclick="toggleWithdraw()">Вывести</button>
+                </div>
+            </div>
+
+            <div id="withdraw-modal" class="withdraw-section">
+                <h3 style="text-align: center; margin-bottom: 5px;">Вывод в Standoff 2</h3>
+                <p style="text-align: center; font-size: 11px; opacity: 0.7;">От 500 VC (Делим на 0.55)</p>
+                
+                <input type="number" id="wd-amount" class="calc-input" placeholder="Введите сумму VC" oninput="calcGold()">
+                <div style="text-align: center; margin: 10px 0; font-size: 18px;">
+                    Вы получите: <b id="wd-result" style="color: #FFD700;">0</b> G
+                </div>
+
+                <label class="file-upload">
+                    <span id="file-label-text">📸 Прикрепить скриншот скина</span>
+                    <input type="file" id="wd-file" accept="image/*" style="display: none;" onchange="updateFile(this)">
+                </label>
+
+                <button class="btn btn-primary" onclick="submitWithdraw()">Отправить заявку</button>
+            </div>
+        </div>
     </div>
 
-    <h1>SOON...</h1>
-    
-    <p class="desc">Сейчас доступ временно ограничен. Попробуйте зайти позже.</p>
-    
-    <p class="hint"> Скоро будет что-то интересное.</p>
-
-    <button class="btn-update" onclick="window.location.reload()">Обновить</button>
+    <nav>
+        <div class="nav-item active" onclick="nav('cases', this)">
+            <svg viewBox="0 0 24 24"><path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6A2,2 0 0,0 20,4Z"/></svg>
+            <span>Кейсы</span>
+        </div>
+        <div class="nav-item" onclick="nav('p2p', this)">
+            <svg viewBox="0 0 24 24"><path d="M12,3L1,9L12,15L21,10.09V17H23V9M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18Z"/></svg>
+            <span>P2P Рынок</span>
+        </div>
+        <div class="nav-item" onclick="nav('inventory', this)">
+            <svg viewBox="0 0 24 24"><path d="M12,2L4,5V11.09C4,16.14 7.41,20.85 12,22C16.59,20.85 20,16.14 20,11.09V5L12,2Z"/></svg>
+            <span>Инвентарь</span>
+        </div>
+        <div class="nav-item" onclick="nav('profile', this)">
+            <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+            <span>Профиль</span>
+        </div>
+    </nav>
 
     <script>
-        // Скрипт: Музыка запускается при первом касании экрана (ограничение браузеров)
-        let audioPlayed = false;
-        const audio = document.getElementById('bg-audio');
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
-        document.body.addEventListener('click', function() {
-            if (!audioPlayed) {
-                audio.play();
-                audioPlayed = true;
-            }
-        });
+        function nav(pageId, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function toggleWithdraw() {
+            const w = document.getElementById('withdraw-modal');
+            w.style.display = w.style.display === 'block' ? 'none' : 'block';
+            if(w.style.display === 'block') window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        function calcGold() {
+            const vc = document.getElementById('wd-amount').value;
+            const res = document.getElementById('wd-result');
+            res.innerText = vc >= 0 ? Math.floor(vc / 0.55) : 0;
+        }
+
+        function updateFile(input) {
+            const text = input.files[0] ? '✅ ' + input.files[0].name : '📸 Прикрепить скриншот скина';
+            document.getElementById('file-label-text').innerText = text;
+        }
+
+        function submitWithdraw() {
+            const vc = document.getElementById('wd-amount').value;
+            const file = document.getElementById('wd-file').files[0];
+            if (vc < 500) return tg.showAlert('Минимум 500 VC');
+            if (!file) return tg.showAlert('Прикрепите скриншот');
+            tg.showConfirm(`Отправить заявку на вывод ${Math.floor(vc / 0.55)} G?`);
+        }
     </script>
-
 </body>
 </html>
