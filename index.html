@@ -1,6 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VO1D STORE</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-grad: linear-gradient(180deg, #30164a 0%, #7e4b68 40%, #d48c48 100%);
+            --accent: #ff9d00; --btn-green: #21C07A; --tab-bg: rgba(20, 10, 30, 0.95); --card-bg: rgba(255, 255, 255, 0.05);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg-grad); height: 100vh; color: white; font-family: -apple-system, sans-serif; overflow: hidden; display: flex; flex-direction: column; }
+        .content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; }
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Навигация */
+        nav { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: var(--tab-bg); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: rgba(255,255,255,0.5); font-size: 11px; transition: 0.2s; cursor: pointer; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
+
+        /* Общие элементы */
+        .section-title { text-align: center; margin: 10px 0 20px; font-weight: bold; letter-spacing: 1px; }
+        .btn { width: 100%; border: none; padding: 15px; border-radius: 12px; font-weight: bold; color: white; cursor: pointer; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: var(--btn-green); }
+        .btn-outline { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+
+        /* Кейсы и Карусель */
+        .carousel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 10px 20px; border-radius: 15px; }
+        .carousel-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 0 10px; }
+        #case-title { font-size: 18px; font-weight: bold; text-align: center; flex: 1; text-shadow: 0 0 10px var(--accent); }
+        
+        .case-wrapper { display: flex; flex-direction: column; align-items: center; position: relative; height: 280px; justify-content: center; }
+        .case-image { font-size: 120px; margin-bottom: 20px; animation: float 3s ease-in-out infinite; text-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: 0.3s; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .case-price { font-size: 32px; font-weight: bold; margin-bottom: 20px; }
+
+        /* Рулетка */
+        .roulette-container { display: none; width: 100%; height: 100px; background: rgba(0,0,0,0.5); border-radius: 15px; border: 2px solid var(--accent); position: relative; overflow: hidden; margin-top: 50px; }
+        .roulette-track { display: flex; height: 100%; align-items: center; transition: transform 4s cubic-bezier(0.15, 0.9, 0.15, 1); }
+        .roulette-item { min-width: 80px; height: 80px; margin: 0 5px; background: var(--card-bg); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.2); font-size: 30px; }
+        .roulette-item span { font-size: 10px; margin-top: 5px; font-weight: bold; text-align: center; }
+        .roulette-pointer { position: absolute; top: 0; left: 50%; width: 4px; height: 100%; background: #ff0055; transform: translateX(-50%); z-index: 10; box-shadow: 0 0 10px #ff0055; }
+
+        /* Модальное окно выигрыша */
+        .win-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(5px); }
+        .win-content { background: var(--bg-grad); padding: 30px; border-radius: 20px; text-align: center; border: 2px solid var(--accent); animation: scaleUp 0.3s; width: 80%; }
+        @keyframes scaleUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .win-item-icon { font-size: 80px; margin: 20px 0; text-shadow: 0 0 30px rgba(255,255,255,0.5); }
+
+        /* P2P, Инвентарь, Профиль */
+        .p2p-filters { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .p2p-card { background: var(--card-bg); border-radius: 16px; padding: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .p2p-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;}
+        .seller-info { display: flex; align-items: center; gap: 10px; }
+        .seller-avatar { width: 40px; height: 40px; border-radius: 50%; background: #555; border: 2px solid var(--accent); background-position: center; background-size: cover; }
+        .p2p-details { display: flex; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 10px;}
+        .inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .inv-slot { aspect-ratio: 1; background: var(--card-bg); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; }
+        .user-card { background: var(--card-bg); border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 15px; }
+        .avatar-lg { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--accent); margin: 0 auto 10px; background-position: center; background-size: cover; }
+        .balance-block { background: rgba(0,0,0,0.2); border-radius: 15px; padding: 20px; margin-bottom: 15px; text-align: center; }
+        .balance-val { font-size: 32px; font-weight: bold; margin: 5px 0 15px; }
+        .balance-actions { display: flex; gap: 10px; }
+        .withdraw-section { display: none; background: var(--card-bg); border-radius: 15px; padding: 15px; margin-top: 15px; border: 1px solid rgba(255,157,0,0.3); }
+        .calc-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; color: white; margin: 10px 0; outline: none; text-align: center; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <div id="win-modal" class="win-modal">
+        <div class="win-content">
+            <h2 style="color: var(--accent);">ВЫБИТ ПРЕДМЕТ!</h2>
+            <div class="win-item-icon" id="win-icon">👑</div>
+            <h3 id="win-name">VIP на 1 день</h3>
+            <button class="btn btn-primary" style="margin-top: 20px;" onclick="closeWinModal()">Забрать</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div id="cases" class="page active">
+            <div class="carousel-header">
+                <button class="carousel-btn" onclick="changeCase(-1)">◄</button>
+                <div id="case-title">Неоновый Бокс</div>
+                <button class="carousel-btn" onclick="changeCase(1)">►</button>
+            </div>
+            
+            <div class="case-wrapper">
+                <div id="case-display">
+                    <div class="case-image" id="case-icon">🧰</div>
+                    <div class="case-price" id="case-price">150 VC</div>
+                </div>
+
+                <div id="roulette" class="roulette-container">
+                    <div class="roulette-pointer"></div>
+                    <div class="roulette-track" id="r-track"></div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-open" onclick="openCase()">ОТКРЫТЬ КЕЙС</button>
+        </div>
+
+        <div id="p2p" class="page">
+            <h2 class="section-title">P2P РЫНОК</h2>
+            <div class="p2p-filters">
+                <button class="btn btn-outline" style="width: 48%; padding: 8px;">Мои лоты</button>
+                <button class="btn btn-primary" style="width: 48%; padding: 8px;">Продать</button>
+            </div>
+            
+            <div class="p2p-card">
+                <div class="p2p-header">
+                    <div class="seller-info">
+                        <div class="seller-avatar" style="background-image: url('https://i.pravatar.cc/150?img=11');"></div>
+                        <div>
+                            <div style="font-weight: bold;">Вася</div>
+                            <div style="font-size: 10px; color: var(--accent);">[ Барон Пустоты ]</div>
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; color: #aaa;">⭐ 4.9 (45)</div>
+                </div>
+                <div class="p2p-details"><span>1000 G</span><span>1 G = 0.8 VC</span></div>
+                <button class="btn btn-primary" style="padding: 10px;">КУПИТЬ ЗА 800 VC</button>
+            </div>
+        </div>
+
+        <div id="inventory" class="page">
+            <h2 class="section-title">ИНВЕНТАРЬ</h2>
+            <div class="inv-grid">
+                </div>
+        </div>
+
+        <div id="profile" class="page">
+            <h2 class="section-title">ПРОФИЛЬ</h2>
+            <div class="user-card">
+                <div style="position: relative; display: inline-block;">
+                    <div class="avatar-lg" id="profile-avatar" style="background-color: #555; transition: box-shadow 0.3s, border-color 0.3s;"></div>
+                    <div id="vip-badge" style="display: none; position: absolute; top: -10px; right: -10px; font-size: 24px; filter: drop-shadow(0 0 5px #FFD700);">👑</div>
+                </div>
+                <h3 id="player-name">Player</h3>
+                <p id="profile-title" style="color: var(--accent); font-size: 12px; font-weight: bold; margin-top: 5px; transition: color 0.3s;">[ Новичок ]</p>
+            </div>
+
+            <div class="balance-block">
+                <div style="opacity: 0.6; font-size: 12px;">Баланс Vo1dCoins</div>
+                <div class="balance-val" id="vc-display">1500 VC</div>
+                <div class="balance-actions">
+                    <button class="btn btn-primary" onclick="showDeposit()">Пополнить</button>
+                    <button class="btn btn-outline" onclick="toggleWd()">Вывести</button>
+                </div>
+            </div>
+            
+            <div id="withdraw-modal" class="withdraw-section">
+                <input type="number" id="wd-amount" class="calc-input" placeholder="VC к выводу" oninput="document.getElementById('wd-res').innerText = this.value >= 0 ? Math.floor(this.value / 0.55) : 0">
+                <div style="text-align: center; margin: 10px 0;">Получите: <b id="wd-res" style="color: #FFD700;">0</b> G</div>
+            </div>
+        </div>
+    </div>
+
+    <nav>
+        <div class="nav-item active" onclick="nav('cases', this)"><svg viewBox="0 0 24 24"><path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6A2,2 0 0,0 20,4Z"/></svg><span>Кейсы</span></div>
+        <div class="nav-item" onclick="nav('p2p', this)"><svg viewBox="0 0 24 24"><path d="M12,3L1,9L12,15L21,10.09V17H23V9M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18Z"/></svg><span>P2P</span></div>
+        <div class="nav-item" onclick="nav('inventory', this)"><svg viewBox="0 0 24 24"><path d="M12,2L4,5V11.09C4,16.14 7.41,20.85 12,22C16.59,20.85 20,16.14 20,11.09V5L12,2Z"/></svg><span>Склад</span></div>
+        <div class="nav-item" onclick="nav('profile', this)"><svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg><span>Профиль</span></div>
+    </nav>
+
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        
+        // Получаем данные юзера из Телеграма
+        const tUser = tg.initDataUnsafe?.user;
+        const playerName = tUser?.first_name || "Player";
+        const playerAvatar = tUser?.photo_url || ""; // Если аватарка скрыта, будет пусто
 
         // === 1. КОНФИГУРАЦИЯ БАЗЫ ДАННЫХ (КЕЙСЫ И ПРЕДМЕТЫ) ===
         const casesConfig = {
@@ -21,7 +196,7 @@
                     { id: "vc_150", type: "currency", icon: "🪙", name: "150 VC (Окуп)", value: 150, chance: 15 },
                     { id: "zero_fee", type: "consumable", icon: "🎟️", name: "Zero Fee", chance: 10 },
                     { id: "vip_1d", type: "consumable", icon: "👑", name: "VIP 1 День", chance: 4 },
-                    { id: "vc_500", type: "currency", icon: "💰", name: "500 VC (ДЖЕКПОТ)", value: 500, chance: 1 },
+                    { id: "vc_500", type: "currency", icon: "💰", name: "500 VC", value: 500, chance: 1 },
                 ]
             },
             case_elite: {
@@ -31,7 +206,17 @@
                     { id: "title_baron", type: "title", icon: "🎖", name: "Барон Пустоты", color: "#FF8C00", chance: 30 },
                     { id: "frame_void", type: "frame", icon: "🔮", name: "Аним Рамка", color: "#FF8C00", chance: 15 },
                     { id: "vip_3d", type: "consumable", icon: "👑", name: "VIP 3 Дня", chance: 10 },
-                    { id: "vc_5000", type: "currency", icon: "💎", name: "5000 VC (МЕГА!)", value: 5000, chance: 5 },
+                    { id: "vc_5000", type: "currency", icon: "💎", name: "5000 VC", value: 5000, chance: 5 },
+                ]
+            },
+            case_mythic: {
+                id: 'mythic', name: "Ящик Богов", price: 1000, icon: "💎", color: "#FF00FF",
+                drops: [
+                    { id: "vc_500", type: "currency", icon: "🪙", name: "500 VC", value: 500, chance: 40 },
+                    { id: "title_emperor", type: "title", icon: "👑", name: "Император", color: "#FF00FF", chance: 30 },
+                    { id: "frame_diamond", type: "frame", icon: "💠", name: "Алмазная Рамка", color: "#00FFFF", chance: 15 },
+                    { id: "vip_30d", type: "consumable", icon: "🌟", name: "VIP 30 Дней", chance: 10 },
+                    { id: "vc_10000", type: "currency", icon: "🤑", name: "10000 VC!", value: 10000, chance: 5 },
                 ]
             }
         };
@@ -224,6 +409,15 @@
         function updateProfileView() {
             document.getElementById('vc-display').innerText = `${userData.balance_vc} VC`;
             
+            // Вставляем имя игрока
+            document.getElementById('player-name').innerText = playerName;
+
+            // Вставляем аватарку игрока (если есть)
+            const avatarEl = document.getElementById('profile-avatar');
+            if (playerAvatar) {
+                avatarEl.style.backgroundImage = `url('${playerAvatar}')`;
+            }
+
             const titleEl = document.getElementById('profile-title');
             if (userData.equipped.title) {
                 titleEl.innerText = `[ ${userData.equipped.title.name} ]`;
@@ -233,7 +427,6 @@
                 titleEl.style.color = "var(--accent)";
             }
 
-            const avatarEl = document.getElementById('profile-avatar');
             if (userData.equipped.frame) {
                 avatarEl.style.borderColor = userData.equipped.frame.color;
                 avatarEl.style.boxShadow = `0 0 20px ${userData.equipped.frame.color}`;
@@ -269,3 +462,5 @@
         updateCaseView();
         refreshAllViews(); 
     </script>
+</body>
+</html>
