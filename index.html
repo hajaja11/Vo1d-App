@@ -148,8 +148,8 @@
                 <div class="balance-val" id="vc-display">1500 VC</div>
                 <div class="balance-actions">
                     <button class="btn btn-primary" onclick="showDeposit()">Пополнить</button>
-                    <button class="btn btn-outline" onclick="toggleWithdraw()">Вывести</button>
-                </div>
+                    <button class="btn btn-outline" onclick="toggleWd()">Вывести</button>
+             </div>
             </div>
             <div id="withdraw-modal" class="withdraw-section">
                 <input type="number" id="wd-amount" class="calc-input" placeholder="VC к выводу" oninput="document.getElementById('wd-res').innerText = this.value >= 0 ? Math.floor(this.value / 0.55) : 0">
