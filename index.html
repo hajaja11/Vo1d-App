@@ -134,10 +134,22 @@
 
         <div id="profile" class="page">
             <h2 class="section-title">ПРОФИЛЬ</h2>
-            <div class="user-card"><div class="avatar-lg" style="background: #555;"></div><h3>Player</h3><p style="color: var(--accent); font-size: 12px;">[ Новичок ]</p></div>
+                        <div class="user-card">
+                <div style="position: relative; display: inline-block;">
+                    <div class="avatar-lg" id="profile-avatar" style="background: #555; transition: box-shadow 0.3s, border-color 0.3s;"></div>
+                    <div id="vip-badge" style="display: none; position: absolute; top: -10px; right: -10px; font-size: 24px; filter: drop-shadow(0 0 5px #FFD700);">👑</div>
+                </div>
+                <h3>Player</h3>
+                <p id="profile-title" style="color: var(--accent); font-size: 12px; font-weight: bold; margin-top: 5px; transition: color 0.3s;">[ Новичок ]</p>
+            </div>
+
             <div class="balance-block">
-                <div style="opacity: 0.6; font-size: 12px;">Баланс Vo1dCoins</div><div class="balance-val">1500 VC</div>
-                <div class="balance-actions"><button class="btn btn-primary">Пополнить</button><button class="btn btn-outline" onclick="toggleWd()">Вывести</button></div>
+                <div style="opacity: 0.6; font-size: 12px;">Баланс Vo1dCoins</div>
+                <div class="balance-val" id="vc-display">1500 VC</div>
+                <div class="balance-actions">
+                    <button class="btn btn-primary" onclick="showDeposit()">Пополнить</button>
+                    <button class="btn btn-outline" onclick="toggleWithdraw()">Вывести</button>
+                </div>
             </div>
             <div id="withdraw-modal" class="withdraw-section">
                 <input type="number" id="wd-amount" class="calc-input" placeholder="VC к выводу" oninput="document.getElementById('wd-res').innerText = this.value >= 0 ? Math.floor(this.value / 0.55) : 0">
