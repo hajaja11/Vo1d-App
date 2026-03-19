@@ -169,6 +169,22 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+                // Локальная база данных нашего юзера (потом заменим на бэкенд)
+        let userData = {
+            balance_vc: 1500,
+            inventory: [
+                { id: "frame_neon", type: "frame", icon: "🔮", name: "Неоновая Рамка", color: "#8A2BE2" },
+                { id: "title_baron", type: "title", icon: "🎖", name: "Барон Пустоты", color: "#FF8C00" },
+                { id: "vip_1d", type: "consumable", icon: "👑", name: "VIP 1 День" },
+                { id: "zero_fee", type: "consumable", icon: "🎟️", name: "Zero Fee" }
+            ],
+            equipped: {
+                frame: null,
+                title: null
+            },
+            isVIP: false
+        };
+
         // База данных кейсов (Фронтенд копия)
         const casesData = [
             { id: 0, name: "Осколок Пустоты", price: "50 VC", icon: "📦", color: "#aaa", drops: [{i:"🪙", n:"20 VC"}, {i:"🔰", n:"Титул"}, {i:"🪙", n:"50 VC"}, {i:"🖼", n:"Рамка"}] },
@@ -261,7 +277,113 @@
         function toggleWd() { const w = document.getElementById('withdraw-modal'); w.style.display = w.style.display === 'block' ? 'none' : 'block'; }
         
         // Инициализация
+                // === ЛОГИКА ИНВЕНТАРЯ И ПРОФИЛЯ ===
+
+        // 1. Отрисовка Инвентаря
+        function renderInventory() {
+            const grid = document.querySelector('.inv-grid');
+            grid.innerHTML = ''; // Очищаем старую сетку
+            
+            userData.inventory.forEach((item, index) => {
+                // Проверяем, надет ли сейчас этот предмет
+                const isEquipped = (userData.equipped.frame?.id === item.id) || (userData.equipped.title?.id === item.id);
+                const borderStyle = isEquipped ? `border: 2px solid ${item.color || 'var(--btn-green)'}; box-shadow: 0 0 10px ${item.color || 'var(--btn-green)'};` : '';
+                
+                grid.innerHTML += `
+                    <div class="inv-slot" style="${borderStyle}" onclick="handleItemClick(${index})">
+                        <div style="font-size: 30px;">${item.icon}</div>
+                        <div style="font-size: 10px; text-align: center; margin-top: 5px;">${item.name}</div>
+                        ${isEquipped ? '<div style="font-size: 9px; color: var(--btn-green); margin-top: 2px;">НАДЕТО</div>' : ''}
+                    </div>
+                `;
+            });
+
+            // Добиваем пустые слоты до 9 штук для красоты
+            for(let i = userData.inventory.length; i < 9; i++) {
+                grid.innerHTML += `<div class="inv-slot"></div>`;
+            }
+        }
+
+        // 2. Клик по предмету в инвентаре
+        function handleItemClick(index) {
+            const item = userData.inventory[index];
+            
+            if (item.type === 'frame' || item.type === 'title') {
+                // Надеваем косметику
+                tg.showConfirm(`Надеть: ${item.name}?`, (confirmed) => {
+                    if(confirmed) {
+                        userData.equipped[item.type] = item;
+                        tg.HapticFeedback.notificationOccurred('success');
+                        refreshAllViews();
+                    }
+                });
+            } else if (item.type === 'consumable') {
+                // Используем расходник (VIP или билет)
+                tg.showConfirm(`Активировать: ${item.name}? Он пропадет из инвентаря.`, (confirmed) => {
+                    if(confirmed) {
+                        if (item.id.includes('vip')) userData.isVIP = true; // Даем VIP
+                        userData.inventory.splice(index, 1); // Удаляем предмет
+                        tg.HapticFeedback.notificationOccurred('success');
+                        tg.showAlert(`${item.name} успешно применен!`);
+                        refreshAllViews();
+                    }
+                });
+            }
+        }
+
+        // 3. Обновление внешнего вида Профиля
+        function updateProfileView() {
+            document.getElementById('vc-display').innerText = `${userData.balance_vc} VC`;
+            
+            // Настройка Титула
+            const titleEl = document.getElementById('profile-title');
+            if (userData.equipped.title) {
+                titleEl.innerText = `[ ${userData.equipped.title.name} ]`;
+                titleEl.style.color = userData.equipped.title.color;
+            } else {
+                titleEl.innerText = "[ Новичок ]";
+                titleEl.style.color = "var(--accent)";
+            }
+
+            // Настройка Рамки (Аватара)
+            const avatarEl = document.getElementById('profile-avatar');
+            if (userData.equipped.frame) {
+                avatarEl.style.borderColor = userData.equipped.frame.color;
+                avatarEl.style.boxShadow = `0 0 20px ${userData.equipped.frame.color}`;
+            } else {
+                avatarEl.style.borderColor = "var(--accent)";
+                avatarEl.style.boxShadow = "none";
+            }
+
+            // Настройка VIP-Короны
+            document.getElementById('vip-badge').style.display = userData.isVIP ? 'block' : 'none';
+        }
+
+        // 4. Пополнение баланса (Попап Telegram)
+        function showDeposit() {
+            tg.showPopup({
+                title: 'Пополнение VC',
+                message: 'Курс: 1 RUB = 1 VC.\nДля пополнения переведите средства через гаранта.',
+                buttons: [
+                    {id: 'contact', type: 'default', text: 'Связаться с Администратором'},
+                    {type: 'cancel'}
+                ]
+            }, (buttonId) => {
+                if (buttonId === 'contact') {
+                    // ЗАМЕНИ НА СВОЙ ТЕЛЕГРАМ ТУТ
+                    tg.openTelegramLink('https://t.me/durov'); 
+                }
+            });
+        }
+
+        // Функция, которая обновляет всё сразу
+        function refreshAllViews() {
+            renderInventory();
+            updateProfileView();
+        }
+                // Инициализация
         updateCaseView();
+        refreshAllViews(); // <--- Добавили вот это! Запускает отрисовку профиля и инвентаря
     </script>
 </body>
 </html>
