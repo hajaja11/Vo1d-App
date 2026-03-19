@@ -3,506 +3,423 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VO1D ULTIMATE STORE</title>
+    <title>VO1D PREMIUM STORE</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg: #0d0612;
-            --panel: rgba(255, 255, 255, 0.05);
-            --accent: #ff9d00;
-            --green: #21C07A;
-            --red: #ff4444;
-            --blue: #2196f3;
-            --purp: #a020f0;
+            --bg: #08040a; --panel: #160d1f; --accent: #ff9d00;
+            --green: #00ff88; --red: #ff3333; --blue: #00d9ff;
+            --rarity-0: #9e9e9e; --rarity-1: #2196f3; --rarity-2: #a020f0; --rarity-3: #ff0055;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            background: radial-gradient(circle at top, #1e102d 0%, #0d0612 100%);
-            color: white; font-family: -apple-system, system-ui, sans-serif;
-            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
-        }
-
-        /* Контейнер контента */
-        .main-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; }
-        .page { display: none; animation: slideIn 0.25s ease-out; }
-        .page.active { display: block; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Шапка профиля вверху (всегда видна) */
-        header { padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .balance-badge { background: var(--panel); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--accent); display: flex; align-items: center; gap: 5px; font-weight: bold; }
-
-        /* Кейсы и Рулетка */
-        .case-selector { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; background: var(--panel); border-radius: 15px; padding: 10px; }
-        .case-display { text-align: center; margin: 20px 0; min-height: 250px; }
-        .case-img { width: 180px; height: 180px; object-fit: contain; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.7)); }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        .roulette-wrapper { display: none; width: 100%; height: 120px; background: #000; border-radius: 20px; position: relative; overflow: hidden; border: 2px solid var(--accent); margin: 30px 0; }
-        .roulette-track { display: flex; align-items: center; height: 100%; transition: transform 4s cubic-bezier(0.1, 0.8, 0.1, 1); will-change: transform; }
-        .r-item { min-width: 100px; height: 100px; margin: 0 5px; background: var(--panel); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid; }
-        .r-item b { font-size: 32px; }
-        .r-item span { font-size: 10px; text-align: center; padding: 0 5px; }
-        .roulette-center { position: absolute; left: 50%; top: 0; bottom: 0; width: 3px; background: var(--red); z-index: 10; transform: translateX(-50%); box-shadow: 0 0 15px red; }
+        /* Скроллбары */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
-        /* Инвентарь */
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .slot { aspect-ratio: 1; background: var(--panel); border-radius: 15px; border: 2px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        .slot.equipped { border-color: var(--green); background: rgba(33, 192, 122, 0.1); }
-        .slot b { font-size: 32px; }
-        .slot .rarity-tag { position: absolute; bottom: 5px; font-size: 8px; font-weight: bold; }
+        .content { flex: 1; overflow-y: auto; padding: 15px 15px 100px; position: relative; }
+        .page { display: none; } .page.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
-        /* P2P Маркет */
-        .market-card { background: var(--panel); border-radius: 20px; padding: 15px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        .seller-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .seller-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent); background-size: cover; }
-        .deal-badge { font-size: 10px; color: var(--green); }
-        .deal-status { background: rgba(255, 157, 0, 0.2); padding: 5px; border-radius: 5px; font-size: 11px; margin-top: 10px; text-align: center; }
+        /* Header */
+        header { padding: 15px; background: var(--panel); display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid rgba(255,157,0,0.2); z-index: 10; }
+        .user-block { display: flex; align-items: center; gap: 10px; }
+        .lvl-badge { background: var(--accent); color: black; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; }
+        
+        /* Кейсы и Рулетка */
+        .case-card { background: linear-gradient(145deg, #1d1129, #13091a); border-radius: 30px; padding: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px; }
+        .case-img { width: 200px; height: 200px; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.8)); transition: 0.3s; }
+        .case-img.spin-anim { animation: caseShake 0.5s infinite; }
+        @keyframes caseShake { 0% { transform: scale(1); } 50% { transform: scale(1.05) rotate(2deg); } 100% { transform: scale(1); } }
+
+        .roulette-container { display: none; width: 100%; height: 130px; background: #000; border-radius: 20px; position: relative; overflow: hidden; border: 2px solid var(--accent); margin: 20px 0; }
+        .track { display: flex; align-items: center; height: 100%; will-change: transform; }
+        .r-item { min-width: 110px; height: 110px; margin: 0 5px; background: var(--panel); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 4px solid; }
+        .r-item b { font-size: 35px; margin-bottom: 5px; }
+        .r-item span { font-size: 11px; font-weight: bold; text-align: center; }
+        .pointer { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; background: var(--accent); z-index: 5; transform: translateX(-50%); box-shadow: 0 0 20px var(--accent); }
+
+        /* P2P Гарант */
+        .deal-card { background: var(--panel); border-radius: 20px; padding: 15px; margin-bottom: 12px; border-left: 5px solid var(--accent); position: relative; overflow: hidden; }
+        .status-line { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .step { opacity: 0.3; font-weight: bold; } .step.active { opacity: 1; color: var(--green); }
+        .p2p-info { display: flex; justify-content: space-between; align-items: center; }
+        .g-amount { font-size: 24px; font-weight: 900; color: #FFD700; }
+        
+        /* Склад & Фильтры */
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .f-btn { background: var(--panel); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 6px 15px; border-radius: 10px; font-size: 12px; white-space: nowrap; }
+        .f-btn.active { border-color: var(--accent); background: rgba(255,157,0,0.1); }
+        .inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .slot { aspect-ratio: 1; background: var(--panel); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.05); }
+        .slot.eq { border: 2px solid var(--green); background: rgba(0,255,136,0.05); }
+        .slot b { font-size: 30px; }
 
         /* Навигация */
-        nav { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: rgba(13, 6, 18, 0.98); border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: rgba(255,255,255,0.3); font-size: 11px; text-decoration: none; }
-        .nav-item.active { color: var(--accent); }
-        .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
+        nav { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; background: rgba(22,13,31,0.98); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(15px); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: rgba(255,255,255,0.4); font-size: 11px; transition: 0.3s; }
+        .nav-item.active { color: var(--accent); transform: translateY(-5px); }
+        .nav-item svg { width: 26px; height: 26px; margin-bottom: 4px; }
 
-        /* Модальные окна */
-        .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: flex-end; }
-        .sheet { width: 100%; background: #1a0f24; border-radius: 25px 25px 0 0; padding: 25px; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-        /* Кнопки */
-        .btn { border: none; padding: 15px; border-radius: 15px; font-weight: bold; color: white; cursor: pointer; transition: 0.1s; text-align: center; width: 100%; }
-        .btn:active { transform: scale(0.96); }
-        .btn-green { background: var(--green); }
-        .btn-outline { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); }
-
-        input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; color: white; margin: 10px 0; outline: none; }
+        /* Системные штуки */
+        .btn { border: none; padding: 16px; border-radius: 18px; font-weight: 900; color: white; width: 100%; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-main { background: linear-gradient(to right, #ff9d00, #ff5e00); box-shadow: 0 5px 15px rgba(255,157,0,0.3); }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: flex-end; }
+        .modal { width: 100%; background: #1c1226; border-radius: 30px 30px 0 0; padding: 30px; }
+        canvas#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 2001; }
     </style>
 </head>
 <body>
 
     <header>
-        <div id="user-mini" style="display: flex; align-items: center; gap: 8px;">
-            <div id="mini-avatar" style="width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--accent); background-size: cover;"></div>
-            <span id="mini-name" style="font-size: 13px; font-weight: bold;">...</span>
+        <div class="user-block">
+            <div id="u-ava" style="width:40px; height:40px; border-radius:50%; background-size:cover; border:2px solid var(--accent)"></div>
+            <div>
+                <div id="u-name" style="font-weight:bold; font-size:14px">Player</div>
+                <div style="display:flex; align-items:center; gap:5px">
+                    <span class="lvl-badge">LVL <span id="u-lvl">1</span></span>
+                    <div style="width:60px; height:4px; background:rgba(255,255,255,0.1); border-radius:2px">
+                        <div id="u-xp-bar" style="width:0%; height:100%; background:var(--green); border-radius:2px"></div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="balance-badge" onclick="nav('p-profile', document.getElementById('nav-prof'))">
-            <span id="global-balance">0</span> <small style="color:var(--accent)">VC</small>
+        <div style="text-align:right">
+            <div style="font-size:10px; opacity:0.5">Баланс VC</div>
+            <div id="u-bal" style="font-weight:900; color:var(--accent); font-size:18px">0</div>
         </div>
     </header>
 
-    <div class="main-content">
+    <div class="content">
         <div id="p-cases" class="page active">
-            <div class="case-selector">
-                <button class="btn" style="width:auto; background:none; font-size:24px" onclick="changeCase(-1)">◀</button>
-                <h3 id="cur-case-name" style="color:var(--accent)">ORIGIN</h3>
-                <button class="btn" style="width:auto; background:none; font-size:24px" onclick="changeCase(1)">▶</button>
+            <div class="case-card">
+                <div style="display:flex; justify-content:space-between; align-items:center">
+                    <button onclick="moveCase(-1)" style="background:none; border:none; color:white; font-size:30px">‹</button>
+                    <h2 id="c-name" style="text-transform:uppercase; letter-spacing:2px">ORIGIN</h2>
+                    <button onclick="moveCase(1)" style="background:none; border:none; color:white; font-size:30px">›</button>
+                </div>
+                <div class="roulette-container" id="r-box">
+                    <div class="pointer"></div>
+                    <div class="track" id="r-track"></div>
+                </div>
+                <img id="c-img" class="case-img" src="">
+                <h1 id="c-price" style="margin: 20px 0; font-size: 35px;">0</h1>
+                <button class="btn btn-main" id="btn-open" onclick="startSpin()">ОТКРЫТЬ КЕЙС</button>
             </div>
-
-            <div class="case-display" id="case-area">
-                <img id="cur-case-img" class="case-img" src="">
-                <h2 id="cur-case-price" style="margin-top: 15px; font-size: 32px;">0 VC</h2>
-            </div>
-
-            <div class="roulette-wrapper" id="roulette-ui">
-                <div class="roulette-center"></div>
-                <div class="roulette-track" id="r-track"></div>
-            </div>
-
-            <button class="btn btn-green" id="btn-spin" onclick="spin()">ОТКРЫТЬ КЕЙС</button>
         </div>
 
         <div id="p-p2p" class="page">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2>P2P БИРЖА</h2>
-                <button class="btn btn-green" style="width:auto; padding: 10px 20px;" onclick="openOverlay('sheet-p2p-create')">+ Продать G</button>
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px">
+                <h2>P2P ГАРАНТ</h2>
+                <button class="f-btn" onclick="openModal('m-sell')">Выставить Gold</button>
             </div>
-            
-            <div id="active-deals-container"></div>
-            <div id="market-offers-container"></div>
+            <div id="active-deals"></div>
+            <hr style="opacity:0.1; margin:20px 0">
+            <div id="market-list"></div>
         </div>
 
         <div id="p-inv" class="page">
-            <h2 style="margin-bottom: 15px;">ВАШ СКЛАД</h2>
-            <div class="grid" id="inv-grid"></div>
+            <h2>ИНВЕНТАРЬ</h2>
+            <div class="filter-bar">
+                <button class="f-btn active" onclick="filterInv('all', this)">Все</button>
+                <button class="f-btn" onclick="filterInv('title', this)">Титулы</button>
+                <button class="f-btn" onclick="filterInv('frame', this)">Рамки</button>
+            </div>
+            <div class="inv-grid" id="inv-grid"></div>
         </div>
 
         <div id="p-profile" class="page">
-            <div style="background: var(--panel); border-radius: 25px; padding: 30px; text-align: center;">
-                <div id="full-avatar" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--accent); margin: 0 auto 15px; background-size: cover; background-position: center;"></div>
-                <h3 id="full-name">...</h3>
-                <p id="full-id" style="font-size: 11px; opacity: 0.3; margin-top: 5px;" onclick="adminClick()">ID: 000000</p>
-                <div id="full-title" style="margin-top: 10px; font-weight: bold; color: var(--accent);">[ Новичок ]</div>
-                
-                <div style="margin-top: 25px; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 20px;">
-                    <div style="font-size: 12px; opacity: 0.5;">Ваш кошелек</div>
-                    <div id="full-balance" style="font-size: 36px; font-weight: 900;">0 VC</div>
-                    <div style="display: flex; gap: 10px; margin-top: 15px;">
-                        <button class="btn btn-green" onclick="tg.openTelegramLink('https://t.me/vo1dmenegere2_bot')">ПОПОЛНИТЬ</button>
-                        <button class="btn btn-outline" onclick="tg.openTelegramLink('https://t.me/vo1dmenegere2_bot')">ВЫВОД</button>
+            <div style="background:var(--panel); padding:30px; border-radius:30px; text-align:center">
+                <div id="p-ava-big" style="width:100px; height:100px; border-radius:50%; margin:0 auto 15px; border:4px solid var(--accent); background-size:cover"></div>
+                <h2 id="p-name">Player</h2>
+                <div id="p-title" style="color:var(--accent); font-weight:bold; margin-top:5px">[ НОВИЧОК ]</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:25px">
+                    <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:20px">
+                        <div style="font-size:10px; opacity:0.5">СДЕЛОК</div>
+                        <div id="p-deals" style="font-size:20px; font-weight:900">0</div>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:20px">
+                        <div style="font-size:10px; opacity:0.5">УРОВЕНЬ</div>
+                        <div id="p-lvl-val" style="font-size:20px; font-weight:900">1</div>
                     </div>
                 </div>
-                <div style="margin-top: 15px; color: var(--green); font-size: 12px;">Успешных сделок: <span id="full-deals">0</span></div>
             </div>
         </div>
     </div>
 
-    <div id="overlay-bg" class="overlay" onclick="closeOverlay()">
-        <div id="sheet-item" class="sheet" onclick="event.stopPropagation()">
-            <h3 id="sh-item-name" style="text-align: center; margin-bottom: 20px;">Предмет</h3>
-            <button id="btn-equip-toggle" class="btn btn-green" style="margin-bottom: 10px;" onclick="handleEquip()">НАДЕТЬ / СНЯТЬ</button>
-            <button class="btn btn-outline" style="color:var(--accent); margin-bottom: 10px;" onclick="startP2PFromInv()">ПРОДАТЬ НА P2P</button>
-            <button class="btn btn-outline" onclick="closeOverlay()">ОТМЕНА</button>
+    <div id="modal-bg" class="overlay" onclick="closeModal()">
+        <div class="modal" id="m-sell" onclick="event.stopPropagation()">
+            <h3 style="margin-bottom:20px">Продажа Gold</h3>
+            <input type="number" id="inp-g" placeholder="Количество Gold">
+            <input type="number" id="inp-vc" placeholder="Цена в VC">
+            <button class="btn btn-main" onclick="createOffer()">Опубликовать</button>
         </div>
-
-        <div id="sheet-p2p-create" class="sheet" onclick="event.stopPropagation()">
-            <h3 style="text-align: center; margin-bottom: 15px;">ПРОДАЖА GOLD</h3>
-            <p style="font-size: 11px; opacity: 0.5; text-align: center;">Выступаем как ГАРАНТ. Деньги холдируются.</p>
-            <input type="number" id="inp-gold-amount" placeholder="Сколько Gold продаете?">
-            <input type="number" id="inp-gold-price" placeholder="Цена в VC">
-            <div style="font-size: 10px; margin-bottom: 15px;">Комиссия 5% (платит продавец)</div>
-            <button class="btn btn-green" onclick="submitP2P()">ОПУБЛИКОВАТЬ</button>
+        <div class="modal" id="m-item" onclick="event.stopPropagation()">
+            <h2 id="mi-name" style="text-align:center; margin-bottom:20px">Предмет</h2>
+            <button class="btn btn-main" id="mi-btn" style="margin-bottom:10px">Надеть</button>
+            <button class="btn f-btn" onclick="closeModal()">Закрыть</button>
         </div>
     </div>
 
+    <canvas id="confetti"></canvas>
     <nav>
-        <div class="nav-item active" onclick="nav('p-cases', this)"><svg viewBox="0 0 24 24"><path d="M12,18H6V14H12M21,14H12V18H21M12,10V4H21V10M12,10H6V4H12M3,2V22H21V2H3Z"/></svg><span>Кейсы</span></div>
-        <div class="nav-item" onclick="nav('p-p2p', this)"><svg viewBox="0 0 24 24"><path d="M12,13A5,5 0 0,1 7,8H9A3,3 0 0,0 12,11A3,3 0 0,0 15,8H17A5,5 0 0,1 12,13M12,3A3,3 0 0,1 15,6H9A3,3 0 0,1 12,3M19,6H17A5,5 0 0,0 12,1A5,5 0 0,0 7,6H5C3.89,6 3,6.89 3,8V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V8C21,6.89 20.11,6 19,6Z"/></svg><span>Биржа</span></div>
-        <div class="nav-item" onclick="nav('p-inv', this)"><svg viewBox="0 0 24 24"><path d="M12,2L4,5V11.09C4,16.14 7.41,20.85 12,22C16.59,20.85 20,16.14 20,11.09V5L12,2Z"/></svg><span>Склад</span></div>
-        <div id="nav-prof" class="nav-item" onclick="nav('p-profile', this)"><svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg><span>Профиль</span></div>
+        <div class="nav-item active" onclick="nav('p-cases', this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5,3H19A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3M5,5V19H19V5H5M7,7H11V11H7V7M13,7H17V11H13V7M7,13H11V17H7V13M13,13H17V17H13V13Z"/></svg>Кейсы</div>
+        <div class="nav-item" onclick="nav('p-p2p', this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,15V18H9V20H12V23H14V20H17V18H14V15H12M7,2V5H10V7H7V10H5V7H2V5H5V2H7M17,2V5H20V7H17V10H15V7H12V5H15V2H17Z"/></svg>P2P</div>
+        <div class="nav-item" onclick="nav('p-inv', this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg>Склад</div>
+        <div class="nav-item" onclick="nav('p-profile', this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>Профиль</div>
     </nav>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // --- СОСТОЯНИЕ (БАЗА ДАННЫХ) ---
-        let state = JSON.parse(localStorage.getItem('void_v4_master')) || {
-            balance: 5000,
-            inventory: [],
-            equipped: { title: null, frame: null },
-            dealsCount: 0,
-            activeTransactions: [], // Сделки в процессе (Гарант)
-            market: [] // Объявления
+        // --- ДАННЫЕ ---
+        let db = JSON.parse(localStorage.getItem('void_v5')) || {
+            bal: 10000, xp: 0, deals: 0,
+            inv: [], eq: { title: null, frame: null },
+            market: [], escrow: []
         };
 
-        const save = () => {
-            localStorage.setItem('void_v4_master', JSON.stringify(state));
-            updateUI();
-        };
-
-        // --- КОНФИГУРАЦИЯ ---
         const CASES = [
-            { id: 'c1', name: 'ORIGIN BOX', price: 100, img: 'https://cdn3d.iconscout.com/3d/premium/thumb/box-4996160-4159676.png', drops: [
-                { name: 'Новичок', icon: '🌱', type: 'title', color: '#9e9e9e', chance: 60 },
-                { name: 'Азартный', icon: '🎲', type: 'title', color: '#2196f3', chance: 30 },
-                { name: 'Бронза', icon: '🧱', type: 'frame', color: '#cd7f32', chance: 9 },
-                { name: 'VO1D', icon: '💠', type: 'title', color: '#ff0055', chance: 1 }
+            { name: "Origin", price: 100, img: "https://cdn3d.iconscout.com/3d/premium/thumb/box-4996160-4159676.png", drops: [
+                { name: "Новичок", icon: "🌱", rarity: 0, type: "title", chance: 60 },
+                { name: "Удачливый", icon: "🍀", rarity: 1, type: "title", chance: 30 },
+                { name: "Серебро", icon: "🥈", rarity: 2, type: "frame", chance: 9 },
+                { name: "Void", icon: "💠", rarity: 3, type: "title", chance: 1 }
             ]},
-            { id: 'c2', name: 'NEON CASE', price: 500, img: 'https://cdn3d.iconscout.com/3d/premium/thumb/sci-fi-box-5374092-4493399.png', drops: [
-                { name: 'Неон', icon: '🔮', type: 'frame', color: '#ff00ff', chance: 50 },
-                { name: 'Кибер', icon: '📟', type: 'title', color: '#00ffff', chance: 40 },
-                { name: 'Элитный', icon: '👑', type: 'frame', color: '#FFD700', chance: 10 }
+            { name: "Neon", price: 500, img: "https://cdn3d.iconscout.com/3d/premium/thumb/sci-fi-box-5374092-4493399.png", drops: [
+                { name: "Неон", icon: "🔮", rarity: 2, type: "frame", chance: 80 },
+                { name: "Кибер", icon: "⚡", rarity: 3, type: "title", chance: 20 }
             ]}
         ];
 
-        let curIdx = 0;
-        let isSpinning = false;
-        let selectedItemIdx = null;
-        let adminSteps = 0;
+        let curC = 0, isSpin = false, sIdx = null;
 
-        // --- ЛОГИКА ИНТЕРФЕЙСА ---
-        function nav(pageId, el) {
-            if(isSpinning) return;
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            el.classList.add('active');
+        // --- ЗВУКОВОЙ ДВИЖОК ---
+        const audio = new (window.AudioContext || window.webkitAudioContext)();
+        function playTick() {
+            const osc = audio.createOscillator();
+            const gain = audio.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(150, audio.currentTime);
+            gain.gain.setValueAtTime(0.1, audio.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + 0.1);
+            osc.connect(gain); gain.connect(audio.destination);
+            osc.start(); osc.stop(audio.currentTime + 0.1);
         }
 
-        function changeCase(dir) {
-            if(isSpinning) return;
-            curIdx = (curIdx + dir + CASES.length) % CASES.length;
-            const c = CASES[curIdx];
-            document.getElementById('cur-case-name').innerText = c.name;
-            document.getElementById('cur-case-name').style.color = (curIdx === 0) ? '#ff9d00' : '#a020f0';
-            document.getElementById('cur-case-img').src = c.img;
-            document.getElementById('cur-case-price').innerText = c.price + " VC";
+        // --- СИСТЕМА УРОВНЕЙ ---
+        function addXp(amt) {
+            db.xp += amt;
+            const lvl = Math.floor(Math.sqrt(db.xp / 100)) + 1;
+            const currentLvlStartXP = (lvl - 1) ** 2 * 100;
+            const nextLvlXP = lvl ** 2 * 100;
+            const progress = ((db.xp - currentLvlStartXP) / (nextLvlXP - currentLvlStartXP)) * 100;
+            document.getElementById('u-xp-bar').style.width = progress + "%";
+            document.getElementById('u-lvl').innerText = lvl;
+            document.getElementById('p-lvl-val').innerText = lvl;
+            save();
+        }
+
+        // --- ГАРАНТ ESCROW ---
+        function createOffer() {
+            const g = parseInt(document.getElementById('inp-g').value);
+            const vc = parseInt(document.getElementById('inp-vc').value);
+            if(!g || !vc) return;
+            const u = tg.initDataUnsafe?.user;
+            db.market.push({
+                id: Date.now(), g, vc,
+                seller: u?.first_name || "Player",
+                sId: u?.id || 0,
+                deals: db.deals,
+                f: db.eq.frame?.rarity || 0
+            });
+            save(); closeModal();
+        }
+
+        function buyGold(idx) {
+            const o = db.market[idx];
+            if(db.bal < o.vc) return tg.showAlert("Мало VC!");
+            db.bal -= o.vc;
+            db.escrow.push({ ...o, step: 1, buyerId: tg.initDataUnsafe?.user?.id });
+            db.market.splice(idx, 1);
+            save();
+        }
+
+        function updateStep(idx) {
+            const d = db.escrow[idx];
+            const uId = tg.initDataUnsafe?.user?.id;
+            if(d.step === 1 && d.sId == uId) d.step = 2; // Продавец отправил
+            else if(d.step === 2 && d.buyerId == uId) { // Покупатель получил
+                d.step = 3;
+                db.deals++;
+                db.bal += Math.floor(d.vc * 0.95); // Выплата продавцу (эмуляция)
+                addXp(50);
+                setTimeout(() => { db.escrow.splice(idx, 1); save(); }, 2000);
+            }
+            save();
         }
 
         // --- РУЛЕТКА ---
-        function spin() {
-            const c = CASES[curIdx];
-            if(state.balance < c.price) return tg.showAlert("Недостаточно VC!");
-
-            isSpinning = true;
-            state.balance -= c.price;
-            save();
-
-            // Переключаем UI
-            document.getElementById('case-area').style.display = 'none';
-            document.getElementById('btn-spin').style.display = 'none';
-            document.getElementById('roulette-ui').style.display = 'block';
-
+        function startSpin() {
+            const c = CASES[curC];
+            if(db.bal < c.price || isSpin) return;
+            db.bal -= c.price;
+            isSpin = true;
+            document.getElementById('c-img').style.display = 'none';
+            document.getElementById('r-box').style.display = 'block';
+            
             const track = document.getElementById('r-track');
-            track.innerHTML = '';
-            track.style.transition = 'none';
-            track.style.transform = 'translateX(0)';
-
-            // Генерим победителя
-            let rand = Math.random() * 100, s = 0, win = c.drops[0];
+            track.innerHTML = ''; track.style.transition = 'none'; track.style.transform = 'translateX(0)';
+            
+            let rand = Math.random()*100, s = 0, win = c.drops[0];
             for(let d of c.drops) { s += d.chance; if(rand <= s) { win = d; break; } }
 
-            // Наполняем ленту (60 предметов)
-            for(let i=0; i<60; i++) {
-                const it = (i === 55) ? win : c.drops[Math.floor(Math.random()*c.drops.length)];
-                track.innerHTML += `
-                    <div class="r-item" style="border-color:${it.color}">
-                        <b>${it.icon}</b>
-                        <span style="color:${it.color}">${it.name}</span>
-                    </div>`;
+            for(let i=0; i<50; i++) {
+                const it = (i === 45) ? win : c.drops[Math.floor(Math.random()*c.drops.length)];
+                track.innerHTML += `<div class="r-item" style="border-color:var(--rarity-${it.rarity})"><b>${it.icon}</b><span>${it.name}</span></div>`;
             }
 
-            // Запуск
             setTimeout(() => {
-                const itemWidth = 110; // 100 + 5 + 5 margin
-                const centerShift = document.getElementById('roulette-ui').offsetWidth / 2;
-                const finalPos = (55 * itemWidth) - centerShift + (itemWidth/2);
-                track.style.transition = 'transform 4s cubic-bezier(0.1, 0.8, 0.1, 1)';
-                track.style.transform = `translateX(-${finalPos}px)`;
+                track.style.transition = 'transform 5s cubic-bezier(0.15, 0, 0.15, 1)';
+                track.style.transform = `translateX(-${45*120 - 150}px)`;
+                // Эмуляция тиков
+                let ticks = 0;
+                const interval = setInterval(() => {
+                    ticks++; playTick();
+                    if(ticks > 40) clearInterval(interval);
+                }, 100);
             }, 50);
 
-            // Финиш
             setTimeout(() => {
+                isSpin = false;
                 processWin(win, c.price);
-                isSpinning = false;
-                document.getElementById('case-area').style.display = 'block';
-                document.getElementById('btn-spin').style.display = 'block';
-                document.getElementById('roulette-ui').style.display = 'none';
-            }, 4300);
+                document.getElementById('c-img').style.display = 'inline-block';
+                document.getElementById('r-box').style.display = 'none';
+            }, 5500);
         }
 
-        function processWin(win, cost) {
-            // Проверка на повторку
-            const hasDuplicate = state.inventory.some(i => i.name === win.name) || 
-                                (state.equipped.title?.name === win.name) || 
-                                (state.equipped.frame?.name === win.name);
-
-            if(hasDuplicate) {
-                const comp = Math.floor(cost * 0.4);
-                state.balance += comp;
-                tg.showPopup({ title: 'ПОВТОРКА!', message: `У вас уже есть ${win.name}. Получена компенсация: ${comp} VC` });
+        function processWin(it, cost) {
+            const dup = db.inv.find(x => x.name === it.name) || (db.eq.title?.name == it.name);
+            if(dup) {
+                const cash = Math.floor(cost * 0.4);
+                db.bal += cash;
+                tg.showAlert(`Повторка! +${cash} VC`);
             } else {
-                state.inventory.push({...win, id: Date.now()});
-                tg.showPopup({ title: 'ПОЗДРАВЛЯЕМ!', message: `Вы выбили: ${win.name}` });
+                db.inv.push({...it, id: Date.now()});
+                if(it.rarity >= 2) launchConfetti();
             }
+            addXp(20);
             save();
-            tg.HapticFeedback.notificationOccurred('success');
         }
 
-        // --- ОБНОВЛЕНИЕ UI ---
-        function updateUI() {
-            const user = tg.initDataUnsafe?.user;
-            const name = user?.first_name || "Игрок";
-            const avatar = user?.photo_url || "";
+        // --- UI ---
+        function save() { localStorage.setItem('void_v5', JSON.stringify(db)); render(); }
 
-            // Header & Profile
-            document.getElementById('global-balance').innerText = state.balance;
-            document.getElementById('mini-name').innerText = name;
-            document.getElementById('full-name').innerText = name;
-            document.getElementById('full-balance').innerText = state.balance + " VC";
-            document.getElementById('full-deals').innerText = state.dealsCount;
-            document.getElementById('full-id').innerText = "ID: " + (user?.id || "666777");
-
-            if(avatar) {
-                document.getElementById('mini-avatar').style.backgroundImage = `url('${avatar}')`;
-                document.getElementById('full-avatar').style.backgroundImage = `url('${avatar}')`;
+        function render() {
+            document.getElementById('u-bal').innerText = db.bal;
+            document.getElementById('u-name').innerText = tg.initDataUnsafe?.user?.first_name || "Player";
+            document.getElementById('p-name').innerText = tg.initDataUnsafe?.user?.first_name || "Player";
+            document.getElementById('p-deals').innerText = db.deals;
+            const uAva = tg.initDataUnsafe?.user?.photo_url;
+            if(uAva) {
+                document.getElementById('u-ava').style.backgroundImage = `url('${uAva}')`;
+                document.getElementById('p-ava-big').style.backgroundImage = `url('${uAva}')`;
             }
-
-            const t = state.equipped.title;
-            const f = state.equipped.frame;
-            document.getElementById('full-title').innerText = t ? `[ ${t.name} ]` : "[ Новичок ]";
-            document.getElementById('full-title').style.color = t ? t.color : 'var(--accent)';
-            document.getElementById('full-avatar').style.borderColor = f ? f.color : 'var(--accent)';
 
             // Склад
-            const invGrid = document.getElementById('inv-grid');
-            invGrid.innerHTML = '';
-            state.inventory.forEach((it, idx) => {
-                const isEq = (state.equipped.title?.id === it.id || state.equipped.frame?.id === it.id);
-                invGrid.innerHTML += `
-                    <div class="slot ${isEq?'equipped':''}" onclick="openItemOptions(${idx})">
-                        <b>${it.icon}</b>
-                        <span style="color:${it.color}">${it.name}</span>
-                        <div class="rarity-tag" style="color:${it.color}">${it.type.toUpperCase()}</div>
-                    </div>`;
-            });
-            for(let i=state.inventory.length; i<9; i++) invGrid.innerHTML += `<div class="slot" style="opacity:0.1"></div>`;
-
-            // Маркет & Сделки (Гарант)
-            renderMarket();
-        }
-
-        // --- П2П ГАРАНТ ЛОГИКА ---
-        function renderMarket() {
-            const marketCont = document.getElementById('market-offers-container');
-            const dealsCont = document.getElementById('active-deals-container');
-            
-            marketCont.innerHTML = state.market.length ? '<h4>Предложения</h4>' : '';
-            dealsCont.innerHTML = state.activeTransactions.length ? '<h4>Ваши сделки (ХОЛД)</h4>' : '';
-
-            // Отрисовка сделок в Холде
-            state.activeTransactions.forEach((deal, idx) => {
-                const user = tg.initDataUnsafe?.user;
-                const isSeller = deal.sellerId == user?.id;
-                dealsCont.innerHTML += `
-                    <div class="market-card" style="border: 1px dashed var(--accent)">
-                        <div style="font-size:12px; margin-bottom:10px;">Сделка #${deal.id}</div>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div><b>${deal.amount} G</b></div>
-                            <div style="color:var(--accent)">${deal.price} VC</div>
-                        </div>
-                        <div class="deal-status">
-                            ${!deal.sellerConfirmed && isSeller ? 'Ожидание вашей отправки...' : ''}
-                            ${!deal.buyerConfirmed && !isSeller ? 'Ожидание получения голды...' : ''}
-                            ${deal.sellerConfirmed && !deal.buyerConfirmed ? 'Продавец отправил. Подтвердите!' : ''}
-                        </div>
-                        <div style="display:flex; gap:10px; margin-top:10px;">
-                            ${isSeller && !deal.sellerConfirmed ? `<button class="btn btn-green" style="padding:5px" onclick="confirmDeal(${idx}, 'seller')">Я ОТПРАВИЛ</button>` : ''}
-                            ${!isSeller && !deal.buyerConfirmed ? `<button class="btn btn-green" style="padding:5px" onclick="confirmDeal(${idx}, 'buyer')">Я ПОЛУЧИЛ</button>` : ''}
-                        </div>
-                    </div>`;
+            const grid = document.getElementById('inv-grid');
+            grid.innerHTML = '';
+            db.inv.forEach((it, i) => {
+                const isEq = (db.eq.title?.id === it.id || db.eq.frame?.id === it.id);
+                grid.innerHTML += `<div class="slot ${isEq?'eq':''}" onclick="openItem(${i})"><b>${it.icon}</b><div style="font-size:8px; color:var(--rarity-${it.rarity})">${it.name}</div></div>`;
             });
 
-            // Отрисовка объявлений
-            state.market.forEach((off, idx) => {
-                marketCont.innerHTML += `
-                    <div class="market-card">
-                        <div class="seller-row">
-                            <div class="seller-avatar" style="background-image:url('${off.sellerImg}'); border-color:${off.sellerFrame}"></div>
-                            <div style="flex:1">
-                                <div style="font-size:13px; font-weight:bold">${off.sellerName}</div>
-                                <div class="deal-badge">Сделок: ${off.sellerDeals} ✅</div>
-                            </div>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; align-items:flex-end">
-                            <div>
-                                <div style="font-size:18px; font-weight:900; color:#FFD700">${off.amount} G</div>
-                                <div style="font-size:10px; opacity:0.5">Курс: 1G = ${(off.price/off.amount).toFixed(2)} VC</div>
-                            </div>
-                            <div style="text-align:right">
-                                <div style="font-weight:bold; color:var(--accent)">${off.price} VC</div>
-                                <button class="btn btn-green" style="width:auto; padding:5px 15px; margin-top:5px" onclick="buyOffer(${idx})">КУПИТЬ</button>
-                            </div>
-                        </div>
-                    </div>`;
-            });
+            // Маркет
+            const mList = document.getElementById('market-list');
+            mList.innerHTML = db.market.map((o, i) => `
+                <div class="deal-card" style="border-color:var(--rarity-${o.f})">
+                    <div style="font-size:12px; opacity:0.6">${o.seller} • сделок: ${o.deals}</div>
+                    <div class="p2p-info">
+                        <div class="g-amount">${o.g} G</div>
+                        <button class="f-btn" style="background:var(--accent); color:black" onclick="buyGold(${i})">${o.vc} VC</button>
+                    </div>
+                </div>`).join('');
+
+            // Активные сделки
+            const aList = document.getElementById('active-deals');
+            aList.innerHTML = db.escrow.map((d, i) => `
+                <div class="deal-card" style="border-color:var(--green)">
+                    <div class="status-line">
+                        <span class="step ${d.step>=1?'active':''}">Оплата</span>
+                        <span class="step ${d.step>=2?'active':''}">Передача</span>
+                        <span class="step ${d.step>=3?'active':''}">Финиш</span>
+                    </div>
+                    <div class="p2p-info">
+                        <b>${d.g} Gold</b>
+                        <button class="f-btn" onclick="updateStep(${i})">${d.step==1?'Я отправил':'Я получил'}</button>
+                    </div>
+                </div>`).join('');
         }
 
-        function submitP2P() {
-            const amount = parseInt(document.getElementById('inp-gold-amount').value);
-            const price = parseInt(document.getElementById('inp-gold-price').value);
-            const user = tg.initDataUnsafe?.user;
-
-            if(!amount || !price) return tg.showAlert("Заполните все поля!");
-
-            state.market.push({
-                id: Date.now(),
-                sellerId: user?.id || "0",
-                sellerName: user?.first_name || "Player",
-                sellerImg: user?.photo_url || "",
-                sellerDeals: state.dealsCount,
-                sellerFrame: state.equipped.frame?.color || "#ff9d00",
-                amount: amount,
-                price: price
-            });
-
-            save();
-            closeOverlay();
-            tg.showAlert("Объявление выставлено!");
+        // --- ВСПОМОГАТЕЛЬНОЕ ---
+        function nav(p, el) {
+            document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+            document.getElementById(p).classList.add('active');
+            el.classList.add('active');
         }
 
-        function buyOffer(idx) {
-            const off = state.market[idx];
-            if(state.balance < off.price) return tg.showAlert("Недостаточно VC!");
-
-            tg.showConfirm(`Купить ${off.amount}G за ${off.price}VC? Деньги будут заморожены у Гаранта до подтверждения.`, (ok) => {
-                if(ok) {
-                    state.balance -= off.price;
-                    state.activeTransactions.push({
-                        ...off,
-                        buyerId: tg.initDataUnsafe?.user?.id,
-                        sellerConfirmed: false,
-                        buyerConfirmed: false
-                    });
-                    state.market.splice(idx, 1);
-                    save();
-                }
-            });
+        function moveCase(d) {
+            curC = (curC + d + CASES.length) % CASES.length;
+            document.getElementById('c-name').innerText = CASES[curC].name;
+            document.getElementById('c-price').innerText = CASES[curC].price + " VC";
+            document.getElementById('c-img').src = CASES[curC].img;
         }
 
-        function confirmDeal(idx, role) {
-            const deal = state.activeTransactions[idx];
-            if(role === 'seller') deal.sellerConfirmed = true;
-            if(role === 'buyer') deal.buyerConfirmed = true;
-
-            if(deal.sellerConfirmed && deal.buyerConfirmed) {
-                // Сделка завершена!
-                const fee = Math.floor(deal.price * 0.05);
-                // В реальности мы бы отправили деньги продавцу через бэкенд
-                // В этой симуляции мы просто завершаем процесс
-                state.dealsCount++;
-                state.activeTransactions.splice(idx, 1);
-                tg.showAlert("Сделка успешно завершена!");
-            }
-            save();
+        function openItem(i) {
+            sIdx = i; const it = db.inv[i];
+            document.getElementById('mi-name').innerText = it.name;
+            document.getElementById('mi-name').style.color = `var(--rarity-${it.rarity})`;
+            const isEq = (db.eq.title?.id === it.id || db.eq.frame?.id === it.id);
+            document.getElementById('mi-btn').innerText = isEq ? "Снять" : "Надеть";
+            document.getElementById('mi-btn').onclick = () => {
+                if(isEq) db.eq[it.type] = null;
+                else db.eq[it.type] = it;
+                save(); closeModal();
+            };
+            openModal('m-item');
         }
 
-        // --- МОДАЛКИ И ИНВЕНТАРЬ ---
-        function openItemOptions(idx) {
-            selectedItemIdx = idx;
-            const it = state.inventory[idx];
-            document.getElementById('sh-item-name').innerText = it.name;
-            document.getElementById('sh-item-name').style.color = it.color;
-            const isEq = (state.equipped.title?.id === it.id || state.equipped.frame?.id === it.id);
-            document.getElementById('btn-equip-toggle').innerText = isEq ? "СНЯТЬ ПРЕДМЕТ" : "НАДЕТЬ ПРЕДМЕТ";
-            openOverlay('sheet-item');
-        }
-
-        function handleEquip() {
-            const it = state.inventory[selectedItemIdx];
-            if(state.equipped[it.type]?.id === it.id) {
-                state.equipped[it.type] = null;
-            } else {
-                state.equipped[it.type] = it;
-            }
-            save(); closeOverlay();
-        }
-
-        function openOverlay(id) {
-            document.getElementById('overlay-bg').style.display = 'flex';
-            document.querySelectorAll('.sheet').forEach(s => s.style.display = 'none');
+        function openModal(id) {
+            document.getElementById('modal-bg').style.display = 'flex';
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
             document.getElementById(id).style.display = 'block';
         }
+        function closeModal() { document.getElementById('modal-bg').style.display = 'none'; }
 
-        function closeOverlay() {
-            document.getElementById('overlay-bg').style.display = 'none';
-        }
-
-        function adminClick() {
-            adminSteps++;
-            if(adminSteps >= 5) {
-                state.balance += 5000;
-                save();
-                tg.showAlert("АДМИН: +5000 VC!");
-                adminSteps = 0;
+        function launchConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let particles = Array.from({length:100}, () => ({
+                x: Math.random()*canvas.width, y: -20,
+                s: Math.random()*5+2, d: Math.random()*2-1,
+                c: `hsl(${Math.random()*360}, 100%, 50%)`
+            }));
+            function frame() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                particles.forEach(p => {
+                    p.y += p.s; p.x += p.d;
+                    ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, 5, 5);
+                });
+                if(particles[0].y < canvas.height) requestAnimationFrame(frame);
             }
+            frame();
         }
 
-        // --- ИНИЦИАЛИЗАЦИЯ ---
-        changeCase(0);
-        updateUI();
-
+        moveCase(0); addXp(0);
     </script>
 </body>
 </html>
