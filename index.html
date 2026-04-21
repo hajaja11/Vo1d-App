@@ -3,353 +3,391 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BLITZ HUB: LESTA EDITION</title>
+    <title>BLITZ LEGACY: LESTA</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-deep: #05070a;
-            --panel-hex: #12161f;
-            --accent: #ff7b00; /* Оранжевый Лесты */
-            --safe-green: #22c55e;
-            --danger-red: #ef4444;
-            --rarity-x: #eab308; /* Золото для 10 ур */
-            --rarity-8: #a855f7; /* Фиолет для 8 ур */
-            --text-silver: #c0c0c0;
+            --bg: #05080a;
+            --panel: #0f131a;
+            --accent: #f36d00;
+            --accent-glow: rgba(243, 109, 0, 0.4);
+            --gold: #ffcc00;
+            --silver: #b4c0c9;
+            --rarity-x: #ff4e4e;
+            --rarity-8: #a855f7;
+            --text: #e2e8f0;
         }
 
-        /* Общие стили */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body { 
-            background: var(--bg-deep); color: #fff; 
+            background: var(--bg); color: var(--text); 
             font-family: 'Exo 2', sans-serif; height: 100vh; 
-            display: flex; flex-direction: column; overflow: hidden;
+            overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* Анимации */
-        @keyframes glow { 0% { box-shadow: 0 0 5px var(--accent); } 50% { box-shadow: 0 0 20px var(--accent); } 100% { box-shadow: 0 0 5px var(--accent); } }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+        /* --- UI ELEMENTS --- */
+        .glass { background: rgba(15, 19, 26, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .btn { 
+            background: var(--accent); color: #000; border: none; padding: 12px; 
+            border-radius: 8px; font-weight: 800; font-family: 'Orbitron'; 
+            cursor: pointer; transition: 0.2s; text-transform: uppercase;
+        }
+        .btn:active { transform: scale(0.96); opacity: 0.8; }
+        .btn-outline { background: none; border: 1px solid var(--accent); color: var(--accent); }
 
-        /* Шапка */
-        header {
-            background: var(--panel-hex); padding: 20px;
-            border-bottom: 2px solid #1e2533; display: flex;
-            justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        /* --- HEADER --- */
+        header { 
+            padding: 20px; display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(to bottom, #161b22, transparent);
         }
-        .logo-area h1 { font-family: 'Orbitron'; font-size: 18px; letter-spacing: 2px; color: var(--accent); }
-        .currency-cluster { display: flex; gap: 15px; }
-        .val-box { display: flex; align-items: center; gap: 5px; font-weight: 800; font-family: 'Orbitron'; font-size: 14px; }
-        .val-box span { color: var(--accent); }
+        .profile-chip { display: flex; align-items: center; gap: 12px; }
+        #user-avatar { 
+            width: 45px; height: 45px; border-radius: 50%; 
+            border: 2px solid var(--accent); object-fit: cover;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+        .balance-info { text-align: right; font-family: 'Orbitron'; }
+        .balance-info span { display: block; font-size: 10px; color: var(--silver); }
+        .balance-info b { font-size: 16px; color: var(--accent); }
 
-        /* Навигация */
-        nav {
-            background: var(--panel-hex); height: 75px;
-            display: flex; border-top: 1px solid #1e2533;
-            padding-bottom: env(safe-area-inset-bottom);
+        /* --- NAVIGATION --- */
+        nav { 
+            position: fixed; bottom: 0; width: 100%; height: 80px; 
+            display: flex; justify-content: space-around; align-items: center;
+            background: var(--panel); border-top: 1px solid #1e2533;
+            padding-bottom: env(safe-area-inset-bottom); z-index: 100;
         }
-        .nav-link {
-            flex: 1; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            color: #4b5563; transition: 0.3s; text-decoration: none;
+        .nav-item { 
+            flex: 1; display: flex; flex-direction: column; align-items: center; 
+            color: #4b5563; font-size: 10px; font-weight: 700; gap: 5px;
         }
-        .nav-link.active { color: var(--accent); background: rgba(255,123,0,0.05); }
-        .nav-link svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
-        .nav-link span { font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item svg { width: 24px; height: 24px; fill: currentColor; }
 
-        /* Контент */
-        .viewport { flex: 1; overflow-y: auto; padding: 20px; }
-        .section { display: none; animation: slideIn 0.3s ease-out; }
-        .section.active { display: block; }
+        /* --- VIEWS --- */
+        .view { display: none; flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
+        .view.active { display: block; animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Карточки */
-        .glass-card {
-            background: rgba(18, 22, 31, 0.8); border: 1px solid #1e2533;
-            border-radius: 16px; padding: 20px; margin-bottom: 20px;
-            backdrop-filter: blur(10px);
-        }
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #1e2533; }
-        .stat-label { color: var(--text-silver); font-size: 12px; }
-        .stat-value { font-weight: 800; color: #fff; }
+        /* --- HANGAR & STATS --- */
+        .stats-card { padding: 20px; border-radius: 16px; margin-bottom: 25px; position: relative; overflow: hidden; }
+        .stats-card::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); opacity: 0.1; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .stat-item { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border-left: 3px solid var(--accent); }
+        .stat-item label { display: block; font-size: 9px; color: var(--silver); text-transform: uppercase; }
+        .stat-item value { font-family: 'Orbitron'; font-size: 14px; font-weight: 700; }
 
-        /* Поиск */
-        .search-grp { display: flex; gap: 10px; margin-bottom: 20px; }
-        .search-grp input {
-            flex: 1; background: #000; border: 1px solid #1e2533;
-            border-radius: 10px; padding: 12px; color: #fff; font-size: 16px; outline: none;
+        /* --- INVENTORY ITEMS --- */
+        .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .tank-card { 
+            background: var(--panel); border-radius: 12px; padding: 12px; 
+            border: 1px solid #1e2533; position: relative; 
         }
-        .btn-action {
-            background: var(--accent); border: none; border-radius: 10px;
-            padding: 12px 20px; color: #000; font-weight: 900;
-            text-transform: uppercase; cursor: pointer; transition: 0.2s;
-        }
-        .btn-action:active { transform: scale(0.95); }
+        .tank-img { width: 100%; height: 80px; object-fit: contain; margin-bottom: 8px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
+        .tank-name { font-size: 13px; font-weight: 800; margin-bottom: 10px; height: 32px; overflow: hidden; }
+        .tank-rarity { font-size: 9px; font-weight: 900; color: var(--accent); margin-bottom: 5px; }
 
-        /* Инвентарь */
-        .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .tank-card {
-            background: #000; border-radius: 12px; padding: 15px;
-            border-top: 4px solid var(--text-silver); position: relative;
-            overflow: hidden;
+        /* --- MARKET & CASE OPENING --- */
+        .case-preview { 
+            text-align: center; padding: 40px 20px; border: 2px dashed #1e2533; 
+            border-radius: 20px; margin-bottom: 20px; 
         }
-        .tank-card.rarity-10 { border-top-color: var(--rarity-x); box-shadow: 0 0 15px rgba(234,179,8,0.2); }
-        .tank-card.rarity-8 { border-top-color: var(--rarity-8); }
-        .tank-name { font-weight: 800; font-size: 14px; margin-bottom: 5px; }
-        .tank-level { font-family: 'Orbitron'; font-size: 10px; color: var(--accent); }
+        .case-icon { font-size: 80px; margin-bottom: 20px; display: inline-block; transition: 0.3s; }
+        .case-opening .case-icon { animation: shake 0.5s infinite; }
 
-        /* Взвод (P2P) */
-        .p2p-request {
-            background: var(--panel-hex); border-left: 4px solid var(--accent);
-            padding: 15px; border-radius: 10px; margin-bottom: 12px;
-            display: flex; justify-content: space-between; align-items: center;
+        @keyframes shake {
+            0% { transform: rotate(0); } 25% { transform: rotate(5deg); }
+            50% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } 100% { transform: rotate(0); }
         }
-        .p2p-info h4 { font-size: 16px; margin-bottom: 4px; }
-        .p2p-meta { font-size: 11px; color: var(--text-silver); }
-        .p2p-badge { background: #1e2533; padding: 4px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; }
 
-        /* Модалка */
-        #modal-overlay {
-            position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.95); z-index: 1000; display: none;
-            padding: 40px 20px;
+        /* --- DROP MODAL --- */
+        #drop-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); z-index: 1000; 
+            display: none; align-items: center; justify-content: center; flex-direction: column;
+            padding: 40px; text-align: center;
         }
+        .drop-anim { animation: dropPop 0.6s cubic-bezier(0.17, 0.89, 0.32, 1.49); }
+        @keyframes dropPop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .shine { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 300px; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); z-index: -1; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; } 50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.2; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; } }
+
+        /* --- PLATOON --- */
+        .p2p-card { background: var(--panel); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 4px solid var(--accent); }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="logo-area">
-        <h1 id="header-title">BLITZ OPS</h1>
-    </div>
-    <div class="currency-cluster">
-        <div class="val-box"><span id="user-vc">2500</span>&nbsp;VC</div>
-    </div>
-</header>
-
-<div class="viewport">
-    
-    <div id="view-hangar" class="section active">
-        <div class="glass-card">
-            <h3 style="margin-bottom: 15px; font-family: 'Orbitron';">СИНХРОНИЗАЦИЯ LESTA</h3>
-            <div class="search-grp">
-                <input type="text" id="lesta-nick" placeholder="Ваш ник в игре...">
-                <button class="btn-action" onclick="syncLesta()">SCAN</button>
+    <header>
+        <div class="profile-chip">
+            <img src="" id="user-avatar" alt="Avatar">
+            <div>
+                <b id="user-name">COMMANDER</b>
+                <p style="font-size: 10px; color: var(--safe-green);" id="sync-status">Офлайн</p>
             </div>
-            <div id="player-stats-box" style="display: none;">
-                <div class="stat-row"><span class="stat-label">ПОБЕДЫ</span><span class="stat-value" id="res-wr" style="color: var(--safe-green);">--</span></div>
-                <div class="stat-row"><span class="stat-label">СРЕДНИЙ УРОН</span><span class="stat-value" id="res-dmg">--</span></div>
-                <div class="stat-row"><span class="stat-label">БОЕВ</span><span class="stat-value" id="res-battles">--</span></div>
+        </div>
+        <div class="balance-info">
+            <span>ВАШ БАЛАНС</span>
+            <b id="balance-val">0</b> VC
+        </div>
+    </header>
+
+    <div id="view-hangar" class="view active">
+        <div class="glass stats-card">
+            <h3 style="font-family: 'Orbitron'; font-size: 14px;">СТАТИСТИКА LESTA</h3>
+            <div class="search-grp" style="display: flex; gap: 8px; margin-top: 15px;">
+                <input type="text" id="lesta-nick" placeholder="Введите ник..." style="flex: 1; background: #000; border: 1px solid #1e2533; padding: 10px; border-radius: 8px; color: #fff;">
+                <button class="btn" style="padding: 10px 15px;" onclick="syncWithLesta()">SYNC</button>
+            </div>
+            
+            <div id="stats-display" style="display: none;">
+                <div class="stat-grid">
+                    <div class="stat-item"><label>Победы</label><value id="st-wr">0%</value></div>
+                    <div class="stat-item"><label>Бои</label><value id="st-bt">0</value></div>
+                    <div class="stat-item"><label>Урон</label><value id="st-avg">0</value></div>
+                    <div class="stat-item"><label>W7</label><value id="st-w7">--</value></div>
+                </div>
             </div>
         </div>
 
-        <h3 style="margin-bottom: 15px; font-family: 'Orbitron'; color: var(--text-silver);">МОЙ АНГАР</h3>
-        <div class="inv-grid" id="inventory-list">
+        <h3 style="font-family: 'Orbitron'; margin-bottom: 15px; font-size: 14px;">ВАШ АНГАР</h3>
+        <div class="inv-grid" id="hangar-list">
             </div>
     </div>
 
-    <div id="view-market" class="section">
-        <div class="glass-card" style="text-align: center; border: 2px solid var(--accent); animation: glow 3s infinite;">
-            <div style="font-size: 64px; margin-bottom: 10px;">🛡️</div>
-            <h2 style="font-family: 'Orbitron'; color: var(--accent);">КОНТЕЙНЕР "LESTA"</h2>
-            <p style="font-size: 12px; color: var(--text-silver); margin: 10px 0 20px;">Шанс на Объект 260 или AMX M4 54</p>
-            <button class="btn-action" style="width: 100%;" onclick="gambleCase()">ОТКРЫТЬ (500 VC)</button>
+    <div id="view-market" class="view">
+        <div class="case-preview glass" id="case-box">
+            <div class="case-icon" id="case-sprite">📦</div>
+            <h2 style="font-family: 'Orbitron'; margin-bottom: 5px;">LESTA CONTAINER</h2>
+            <p style="color: var(--silver); font-size: 12px; margin-bottom: 25px;">Шанс на премиум технику X уровня</p>
+            <button class="btn" style="width: 100%;" onclick="startOpening()">ОТКРЫТЬ ЗА 300 VC</button>
+        </div>
+
+        <div class="glass" style="padding: 15px; border-radius: 12px;">
+            <p style="font-size: 11px; color: var(--silver); text-transform: uppercase;">Возможный дроп:</p>
+            <div style="display: flex; gap: 10px; margin-top: 10px; overflow-x: auto;">
+                <div style="min-width: 60px; height: 60px; background: #000; border-radius: 8px; border: 1px solid var(--rarity-x);"></div>
+                <div style="min-width: 60px; height: 60px; background: #000; border-radius: 8px; border: 1px solid var(--rarity-8);"></div>
+            </div>
         </div>
     </div>
 
-    <div id="view-platoon" class="section">
+    <div id="view-platoon" class="view">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="font-family: 'Orbitron';">ПОИСК ВЗВОДА</h3>
-            <button class="btn-action" style="padding: 8px 15px; font-size: 12px;" onclick="toggleModal(true)">СОЗДАТЬ</button>
+            <h3 style="font-family: 'Orbitron';">ВЗВОДЫ P2P</h3>
+            <button class="btn" style="padding: 8px 15px; font-size: 12px;" onclick="createPlatoon()">СОЗДАТЬ</button>
         </div>
-        <div id="platoon-feed">
+        <div id="platoon-list">
             </div>
     </div>
-</div>
 
-<div id="modal-overlay">
-    <div class="glass-card">
-        <h3 style="margin-bottom: 20px;">НОВАЯ ЗАЯВКА</h3>
-        <input type="text" id="pl-input-nick" class="search-grp" style="width:100%; margin-bottom:15px; padding:12px;" placeholder="Ваш ник...">
-        <input type="text" id="pl-input-wr" class="search-grp" style="width:100%; margin-bottom:15px; padding:12px;" placeholder="Процент побед (напр. 55%)...">
-        <input type="text" id="pl-input-lvl" class="search-grp" style="width:100%; margin-bottom:15px; padding:12px;" placeholder="Уровень (8, 10)...">
-        <button class="btn-action" style="width: 100%;" onclick="publishPlatoon()">ОПУБЛИКОВАТЬ</button>
-        <button class="btn-action" style="width: 100%; background: none; color: #fff; margin-top: 10px;" onclick="toggleModal(false)">ОТМЕНА</button>
+    <div id="drop-overlay">
+        <div class="shine"></div>
+        <div id="drop-content" class="drop-anim">
+            <p style="color: var(--accent); font-family: 'Orbitron'; margin-bottom: 10px;">НОВАЯ ТЕХНИКА!</p>
+            <img src="" id="drop-img" style="width: 250px; margin-bottom: 20px;">
+            <h1 id="drop-name" style="font-family: 'Orbitron'; font-size: 24px;">TANK NAME</h1>
+            <button class="btn" style="margin-top: 30px; width: 200px;" onclick="closeDrop()">В АНГАР</button>
+        </div>
     </div>
-</div>
 
-<nav>
-    <a href="#" class="nav-link active" onclick="showPage('view-hangar', this)">
-        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-        <span>Ангар</span>
-    </a>
-    <a href="#" class="nav-link" onclick="showPage('view-market', this)">
-        <svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
-        <span>Рынок</span>
-    </a>
-    <a href="#" class="nav-link" onclick="showPage('view-platoon', this)">
-        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-        <span>Взвод</span>
-    </a>
-</nav>
+    <nav>
+        <div class="nav-item active" onclick="nav('view-hangar', this)">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            АНГАР
+        </div>
+        <div class="nav-item" onclick="nav('view-market', this)">
+            <svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
+            МАРКЕТ
+        </div>
+        <div class="nav-item" onclick="nav('view-platoon', this)">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            ВЗВОД
+        </div>
+    </nav>
 
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
-    // --- БАЗА ДАННЫХ (LOCALSTORAGE) ---
-    let db = JSON.parse(localStorage.getItem('blitz_db')) || {
-        vc: 2500,
-        inventory: [],
-        platoons: [
-            { nick: 'Varyag_RU', wr: '62%', lvl: '10', time: '5м назад' },
-            { nick: 'Tankist_777', wr: '48%', lvl: '8', time: '12м назад' }
-        ]
-    };
+        // --- DATABASE & STATE ---
+        const TANK_DB = [
+            { id: 1, name: "Объект 260", lvl: "X", price: 5000, img: "https://eu-wotp.wgcdn.co/static/5.112.0_050091/wotp_static/img/tank_setup/tanks/ussr/r110_object_260.png", rarity: "rarity-x" },
+            { id: 2, name: "AMX M4 54", lvl: "X", price: 4500, img: "https://eu-wotp.wgcdn.co/static/5.112.0_050091/wotp_static/img/tank_setup/tanks/france/f82_amx_m4_mle_54.png", rarity: "rarity-x" },
+            { id: 3, name: "Progetto 46", lvl: "VIII", price: 2000, img: "https://eu-wotp.wgcdn.co/static/5.112.0_050091/wotp_static/img/tank_setup/tanks/italy/it13_progetto_46.png", rarity: "rarity-8" },
+            { id: 4, name: "Bourrasque", lvl: "VIII", price: 2200, img: "https://eu-wotp.wgcdn.co/static/5.112.0_050091/wotp_static/img/tank_setup/tanks/france/f116_bat_chatillon_12t_mle_54.png", rarity: "rarity-8" }
+        ];
 
-    function save() {
-        localStorage.setItem('blitz_db', JSON.stringify(db));
-        updateHeader();
-    }
+        let state = JSON.parse(localStorage.getItem('blitz_state')) || {
+            vc: 1000,
+            inventory: [],
+            platoons: []
+        };
 
-    function updateHeader() {
-        document.getElementById('user-vc').innerText = db.vc;
-    }
+        // --- INIT ---
+        function init() {
+            // Подгружаем данные TG
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                document.getElementById('user-name').innerText = user.first_name.toUpperCase();
+                document.getElementById('user-avatar').src = user.photo_url || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+            }
+            updateUI();
+            renderHangar();
+            renderPlatoons();
+        }
 
-    // --- НАВИГАЦИЯ ---
-    function showPage(pageId, el) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        el.classList.add('active');
-        tg.HapticFeedback.impactOccurred('light');
-    }
+        function updateUI() {
+            document.getElementById('balance-val').innerText = state.vc;
+            localStorage.setItem('blitz_state', JSON.stringify(state));
+        }
 
-    // --- LESTA API СИНХРОНИЗАЦИЯ ---
-    const APP_ID = 'e7428f7bece3bb697c11f7c75db4ce50'; // Твой ключ Lesta
+        // --- LESTA API (С исправлением CORS) ---
+        async function syncWithLesta() {
+            const nick = document.getElementById('lesta-nick').value;
+            if (!nick) return tg.showAlert("Введите никнейм");
 
-    async function syncLesta() {
-        const nick = document.getElementById('lesta-nick').value.trim();
-        if(!nick) return;
-
-        tg.MainButton.showProgress();
-        try {
-            // Поиск по RU региону (Lesta)
-            const searchRes = await fetch(`https://api.wotblitz.ru/wotb/account/list/?application_id=${APP_ID}&search=${nick}`);
-            const searchData = await searchRes.json();
-
-            if(searchData.status === 'ok' && searchData.data.length > 0) {
-                const accId = searchData.data[0].account_id;
-                const infoRes = await fetch(`https://api.wotblitz.ru/wotb/account/info/?application_id=${APP_ID}&account_id=${accId}`);
-                const infoData = await infoRes.json();
-                const stats = infoData.data[accId].statistics.all;
-
-                document.getElementById('player-stats-box').style.display = 'block';
-                document.getElementById('res-wr').innerText = ((stats.wins / stats.battles)*100).toFixed(2) + '%';
-                document.getElementById('res-dmg').innerText = Math.round(stats.damage_dealt / stats.battles);
-                document.getElementById('res-battles').innerText = stats.battles.toLocaleString();
+            tg.MainButton.setText("ПОИСК...").show();
+            
+            try {
+                // Используем AllOrigins прокси для обхода CORS
+                const searchProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.wotblitz.ru/wotb/account/list/?application_id=e7428f7bece3bb697c11f7c75db4ce50&search=${nick}`)}`;
                 
-                tg.HapticFeedback.notificationOccurred('success');
-            } else {
-                tg.showAlert("Игрок не найден в базе Lesta!");
-            }
-        } catch(e) {
-            tg.showAlert("Ошибка подключения к API");
-        } finally {
-            tg.MainButton.hideProgress();
-        }
-    }
+                const response = await fetch(searchProxy);
+                const json = await response.json();
+                const data = JSON.parse(json.contents);
 
-    // --- РЫНОК И КЕЙСЫ ---
-    const loot = [
-        { name: 'Объект 260', lvl: 'X', rarity: 10, chance: 5 },
-        { name: 'AMX M4 54', lvl: 'X', rarity: 10, chance: 10 },
-        { name: 'Progetto 46', lvl: 'VIII', rarity: 8, chance: 25 },
-        { name: 'Bourrasque', lvl: 'VIII', rarity: 8, chance: 30 },
-        { name: 'Бустеры золота', lvl: 'ITEM', rarity: 0, chance: 30 }
-    ];
+                if (data.status === 'ok' && data.data.length > 0) {
+                    const accId = data.data[0].account_id;
+                    
+                    const infoProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.wotblitz.ru/wotb/account/info/?application_id=e7428f7bece3bb697c11f7c75db4ce50&account_id=${accId}`)}`;
+                    const infoRes = await fetch(infoProxy);
+                    const infoJson = await infoRes.json();
+                    const infoData = JSON.parse(infoJson.contents);
 
-    function gambleCase() {
-        if(db.vc < 500) return tg.showAlert("Недостаточно VC ресурсов!");
-        
-        db.vc -= 500;
-        tg.HapticFeedback.impactOccurred('medium');
-
-        const roll = Math.random() * 100;
-        let pool = 0;
-        let win = loot[loot.length-1];
-
-        for(let item of loot) {
-            pool += item.chance;
-            if(roll <= pool) {
-                win = item;
-                break;
+                    const p = infoData.data[accId].statistics.all;
+                    
+                    document.getElementById('stats-display').style.display = 'block';
+                    document.getElementById('st-wr').innerText = ((p.wins / p.battles) * 100).toFixed(2) + '%';
+                    document.getElementById('st-bt').innerText = p.battles;
+                    document.getElementById('st-avg').innerText = Math.round(p.damage_dealt / p.battles);
+                    document.getElementById('sync-status').innerText = "Синхронизировано";
+                    document.getElementById('sync-status').style.color = "var(--safe-green)";
+                    
+                    tg.HapticFeedback.notificationOccurred('success');
+                } else {
+                    tg.showAlert("Игрок не найден!");
+                }
+            } catch (e) {
+                tg.showAlert("Ошибка API. Попробуйте позже.");
+            } finally {
+                tg.MainButton.hide();
             }
         }
 
-        if(win.rarity > 0) {
-            db.inventory.unshift(win);
-            tg.showAlert(`🔥 ТРОФЕЙ: ${win.name} (${win.lvl})`);
-        } else {
-            tg.showAlert(`Обычный дроп: ${win.name}`);
+        // --- CASE OPENING ---
+        function startOpening() {
+            if (state.vc < 300) return tg.showAlert("Недостаточно VC!");
+            
+            state.vc -= 300;
+            updateUI();
+            
+            const box = document.getElementById('case-box');
+            box.classList.add('case-opening');
+            tg.HapticFeedback.impactOccurred('heavy');
+
+            setTimeout(() => {
+                box.classList.remove('case-opening');
+                const win = TANK_DB[Math.floor(Math.random() * TANK_DB.length)];
+                showDrop(win);
+            }, 2000);
         }
-        
-        save();
-        renderInventory();
-    }
 
-    function renderInventory() {
-        const list = document.getElementById('inventory-list');
-        if(db.inventory.length === 0) {
-            list.innerHTML = `<p style="grid-column: span 2; color: #4b5563; text-align: center;">Ангар пуст. Откройте контейнеры на рынке.</p>`;
-            return;
+        function showDrop(tank) {
+            state.inventory.push(tank);
+            document.getElementById('drop-img').src = tank.img;
+            document.getElementById('drop-name').innerText = tank.name;
+            document.getElementById('drop-overlay').style.display = 'flex';
+            tg.HapticFeedback.notificationOccurred('success');
+            updateUI();
         }
-        list.innerHTML = db.inventory.map(t => `
-            <div class="tank-card rarity-${t.rarity}">
-                <div class="tank-level">${t.lvl} LEVEL</div>
-                <div class="tank-name">${t.name}</div>
-            </div>
-        `).join('');
-    }
 
-    // --- ВЗВОД (P2P) ---
-    function toggleModal(show) {
-        document.getElementById('modal-overlay').style.display = show ? 'block' : 'none';
-    }
+        function closeDrop() {
+            document.getElementById('drop-overlay').style.display = 'none';
+            renderHangar();
+        }
 
-    function publishPlatoon() {
-        const nick = document.getElementById('pl-input-nick').value;
-        const wr = document.getElementById('pl-input-wr').value;
-        const lvl = document.getElementById('pl-input-lvl').value;
+        // --- HANGAR & SELLING ---
+        function renderHangar() {
+            const list = document.getElementById('hangar-list');
+            if (state.inventory.length === 0) {
+                list.innerHTML = '<p style="grid-column: span 2; color: #4b5563; text-align: center; padding: 20px;">Ваш ангар пуст</p>';
+                return;
+            }
 
-        if(!nick || !wr) return tg.showAlert("Заполните данные!");
-
-        db.platoons.unshift({ nick, wr, lvl, time: 'Только что' });
-        save();
-        renderPlatoons();
-        toggleModal(false);
-        tg.HapticFeedback.notificationOccurred('success');
-    }
-
-    function renderPlatoons() {
-        const feed = document.getElementById('platoon-feed');
-        feed.innerHTML = db.platoons.map(p => `
-            <div class="p2p-request">
-                <div class="p2p-info">
-                    <h4>${p.nick}</h4>
-                    <div class="p2p-meta">Статистика: <span style="color: var(--accent)">${p.wr}</span> • Уровни: ${p.lvl}</div>
+            list.innerHTML = state.inventory.map((tank, index) => `
+                <div class="tank-card glass">
+                    <div class="tank-rarity">${tank.lvl} УРОВЕНЬ</div>
+                    <img src="${tank.img}" class="tank-img">
+                    <div class="tank-name">${tank.name}</div>
+                    <button class="btn btn-outline" style="font-size: 10px; width: 100%; padding: 5px;" onclick="sellTank(${index})">
+                        ПРОДАТЬ ЗА ${Math.floor(tank.price * 0.7)} VC
+                    </button>
                 </div>
-                <div style="text-align: right;">
-                    <div class="p2p-badge">${p.time}</div>
-                    <button class="btn-action" style="padding: 5px 10px; font-size: 10px; margin-top: 5px;" onclick="tg.showAlert('Запрос отправлен игроку!')">ВСТУПИТЬ</button>
-                </div>
-            </div>
-        `).join('');
-    }
+            `).join('');
+        }
 
-    // Инициализация
-    updateHeader();
-    renderInventory();
-    renderPlatoons();
-</script>
+        function sellTank(index) {
+            const tank = state.inventory[index];
+            state.vc += Math.floor(tank.price * 0.7);
+            state.inventory.splice(index, 1);
+            tg.HapticFeedback.impactOccurred('medium');
+            updateUI();
+            renderHangar();
+        }
+
+        // --- PLATOONS ---
+        function createPlatoon() {
+            const nick = tg.initDataUnsafe?.user?.username || "Player";
+            state.platoons.unshift({ nick, wr: '55%', lvl: 'X', time: 'сейчас' });
+            renderPlatoons();
+            tg.showAlert("Заявка создана!");
+        }
+
+        function renderPlatoons() {
+            const list = document.getElementById('platoon-list');
+            const mock = [
+                { nick: 'Varyag_Lesta', wr: '61%', lvl: 'X', time: '2м' },
+                { nick: 'Cyber_Tank', wr: '49%', lvl: 'VIII', time: '5м' }
+            ];
+            const data = [...state.platoons, ...mock];
+            
+            list.innerHTML = data.map(p => `
+                <div class="p2p-card glass">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <b>${p.nick}</b>
+                            <p style="font-size: 11px; color: var(--silver); mt-2">Стата: ${p.wr} • Уровень: ${p.lvl}</p>
+                        </div>
+                        <button class="btn" style="padding: 5px 12px; font-size: 10px;" onclick="tg.showAlert('Запрос отправлен!')">ВСТУПИТЬ</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- NAVIGATION ---
+        function nav(id, el) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        init();
+    </script>
 </body>
 </html>
