@@ -3,340 +3,353 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BLITZ HUB</title>
+    <title>BLITZ HUB: LESTA EDITION</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-main: #0a0c10;
-            --bg-panel: #161b22;
-            --accent-orange: #f97316; /* Блицевский оранжевый */
-            --accent-green: #22c55e;
-            --text-main: #e5e7eb;
-            --text-muted: #6b7280;
-            
-            /* Цвета редкости лута */
-            --rarity-gray: #9ca3af;
-            --rarity-blue: #3b82f6;
-            --rarity-purple: #a855f7;
-            --rarity-red: #ef4444;
-            --rarity-yellow: #eab308;
+            --bg-deep: #05070a;
+            --panel-hex: #12161f;
+            --accent: #ff7b00; /* Оранжевый Лесты */
+            --safe-green: #22c55e;
+            --danger-red: #ef4444;
+            --rarity-x: #eab308; /* Золото для 10 ур */
+            --rarity-8: #a855f7; /* Фиолет для 8 ур */
+            --text-silver: #c0c0c0;
         }
 
+        /* Общие стили */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
         body { 
-            background-color: var(--bg-main); color: var(--text-main);
-            font-family: 'Roboto', sans-serif; display: flex; flex-direction: column;
-            height: 100vh; overflow: hidden;
+            background: var(--bg-deep); color: #fff; 
+            font-family: 'Exo 2', sans-serif; height: 100vh; 
+            display: flex; flex-direction: column; overflow: hidden;
         }
 
-        h1, h2, h3, .tank-font { font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase; }
+        /* Анимации */
+        @keyframes glow { 0% { box-shadow: 0 0 5px var(--accent); } 50% { box-shadow: 0 0 20px var(--accent); } 100% { box-shadow: 0 0 5px var(--accent); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
 
-        /* --- ВЕРХНЯЯ ПАНЕЛЬ И БАЛАНС --- */
+        /* Шапка */
         header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px; background: var(--bg-panel); border-bottom: 2px solid #2d3748;
+            background: var(--panel-hex); padding: 20px;
+            border-bottom: 2px solid #1e2533; display: flex;
+            justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .balance-pill {
-            background: rgba(249, 115, 22, 0.1); border: 1px solid var(--accent-orange);
-            padding: 5px 12px; border-radius: 20px; color: var(--accent-orange);
-            font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 5px;
-        }
+        .logo-area h1 { font-family: 'Orbitron'; font-size: 18px; letter-spacing: 2px; color: var(--accent); }
+        .currency-cluster { display: flex; gap: 15px; }
+        .val-box { display: flex; align-items: center; gap: 5px; font-weight: 800; font-family: 'Orbitron'; font-size: 14px; }
+        .val-box span { color: var(--accent); }
 
-        /* --- СТРАНИЦЫ --- */
-        .page { display: none; flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; animation: fadeIn 0.3s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- ВКЛАДКА: СТАТИСТИКА (API WG) --- */
-        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
-        .search-box input {
-            flex: 1; padding: 12px 15px; background: #000; border: 1px solid #2d3748;
-            color: #fff; border-radius: 8px; font-family: 'Roboto'; outline: none;
-        }
-        .search-box input:focus { border-color: var(--accent-orange); }
-        .btn-primary {
-            background: var(--accent-orange); color: #fff; border: none; padding: 0 20px;
-            border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase;
-        }
-        
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; display: none; }
-        .stat-card { background: var(--bg-panel); padding: 15px; border-radius: 12px; border-left: 4px solid var(--accent-green); }
-        .stat-card.wr { border-left-color: var(--rarity-purple); }
-        .stat-card span { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
-        .stat-card b { display: block; font-size: 20px; margin-top: 5px; font-family: 'Montserrat'; }
-
-        /* --- ВКЛАДКА: ЧЕРНЫЙ РЫНОК (КЕЙСЫ) --- */
-        .case-container { text-align: center; margin-top: 20px; }
-        .case-image {
-            width: 150px; height: 150px; background: radial-gradient(circle, #2d3748 0%, #000 100%);
-            border: 2px solid var(--accent-orange); border-radius: 20px; margin: 0 auto 20px;
-            display: flex; align-items: center; justify-content: center; font-size: 60px;
-            box-shadow: 0 0 30px rgba(249, 115, 22, 0.2); transition: 0.2s;
-        }
-        .case-image:active { transform: scale(0.95); }
-        
-        .loot-result {
-            margin-top: 20px; padding: 20px; border-radius: 12px; display: none;
-            background: var(--bg-panel); border: 2px solid transparent; font-family: 'Montserrat';
-        }
-        
-        /* Классы редкости */
-        .rarity-gray { border-color: var(--rarity-gray); color: var(--rarity-gray); }
-        .rarity-blue { border-color: var(--rarity-blue); color: var(--rarity-blue); text-shadow: 0 0 10px rgba(59,130,246,0.5); }
-        .rarity-purple { border-color: var(--rarity-purple); color: var(--rarity-purple); text-shadow: 0 0 10px rgba(168,85,247,0.5); }
-        .rarity-red { border-color: var(--rarity-red); color: var(--rarity-red); text-shadow: 0 0 10px rgba(239,68,68,0.5); }
-        .rarity-yellow { border-color: var(--rarity-yellow); color: var(--rarity-yellow); text-shadow: 0 0 10px rgba(234,179,8,0.5); }
-
-        /* --- ВКЛАДКА: ВЗВОД (P2P) --- */
-        .platoon-board { display: flex; flex-direction: column; gap: 15px; }
-        .platoon-card {
-            background: var(--bg-panel); border-radius: 12px; padding: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .platoon-info h3 { font-size: 16px; margin-bottom: 4px; color: #fff; }
-        .platoon-info p { font-size: 12px; color: var(--text-muted); }
-        .platoon-stats { text-align: right; }
-        .platoon-stats .wr { color: var(--rarity-purple); font-weight: bold; font-family: 'Montserrat'; }
-
-        /* --- НАВИГАЦИЯ --- */
+        /* Навигация */
         nav {
-            position: fixed; bottom: 0; width: 100%; height: 70px; background: var(--bg-panel);
-            display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #2d3748;
+            background: var(--panel-hex); height: 75px;
+            display: flex; border-top: 1px solid #1e2533;
+            padding-bottom: env(safe-area-inset-bottom);
         }
-        .nav-item {
-            color: var(--text-muted); font-size: 10px; font-weight: bold; text-transform: uppercase;
-            display: flex; flex-direction: column; align-items: center; gap: 5px; transition: 0.3s;
+        .nav-link {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            color: #4b5563; transition: 0.3s; text-decoration: none;
         }
-        .nav-item.active { color: var(--accent-orange); }
-        .nav-item svg { width: 24px; height: 24px; fill: currentColor; }
+        .nav-link.active { color: var(--accent); background: rgba(255,123,0,0.05); }
+        .nav-link svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
+        .nav-link span { font-size: 10px; font-weight: 800; text-transform: uppercase; }
 
+        /* Контент */
+        .viewport { flex: 1; overflow-y: auto; padding: 20px; }
+        .section { display: none; animation: slideIn 0.3s ease-out; }
+        .section.active { display: block; }
+
+        /* Карточки */
+        .glass-card {
+            background: rgba(18, 22, 31, 0.8); border: 1px solid #1e2533;
+            border-radius: 16px; padding: 20px; margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #1e2533; }
+        .stat-label { color: var(--text-silver); font-size: 12px; }
+        .stat-value { font-weight: 800; color: #fff; }
+
+        /* Поиск */
+        .search-grp { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-grp input {
+            flex: 1; background: #000; border: 1px solid #1e2533;
+            border-radius: 10px; padding: 12px; color: #fff; font-size: 16px; outline: none;
+        }
+        .btn-action {
+            background: var(--accent); border: none; border-radius: 10px;
+            padding: 12px 20px; color: #000; font-weight: 900;
+            text-transform: uppercase; cursor: pointer; transition: 0.2s;
+        }
+        .btn-action:active { transform: scale(0.95); }
+
+        /* Инвентарь */
+        .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .tank-card {
+            background: #000; border-radius: 12px; padding: 15px;
+            border-top: 4px solid var(--text-silver); position: relative;
+            overflow: hidden;
+        }
+        .tank-card.rarity-10 { border-top-color: var(--rarity-x); box-shadow: 0 0 15px rgba(234,179,8,0.2); }
+        .tank-card.rarity-8 { border-top-color: var(--rarity-8); }
+        .tank-name { font-weight: 800; font-size: 14px; margin-bottom: 5px; }
+        .tank-level { font-family: 'Orbitron'; font-size: 10px; color: var(--accent); }
+
+        /* Взвод (P2P) */
+        .p2p-request {
+            background: var(--panel-hex); border-left: 4px solid var(--accent);
+            padding: 15px; border-radius: 10px; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .p2p-info h4 { font-size: 16px; margin-bottom: 4px; }
+        .p2p-meta { font-size: 11px; color: var(--text-silver); }
+        .p2p-badge { background: #1e2533; padding: 4px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; }
+
+        /* Модалка */
+        #modal-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.95); z-index: 1000; display: none;
+            padding: 40px 20px;
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="user-info tank-font">
-            <span id="tg-name">COMMANDER</span>
-        </div>
-        <div class="balance-pill">
-            <span id="vc-balance">1500</span> VC
-        </div>
-    </header>
+<header>
+    <div class="logo-area">
+        <h1 id="header-title">BLITZ OPS</h1>
+    </div>
+    <div class="currency-cluster">
+        <div class="val-box"><span id="user-vc">2500</span>&nbsp;VC</div>
+    </div>
+</header>
 
-    <div id="page-stats" class="page active">
-        <h2 style="margin-bottom: 15px;">БАЗА ДАННЫХ</h2>
-        <div class="search-box">
-            <input type="text" id="blitz-nick" placeholder="Введите никнейм...">
-            <button class="btn-primary" onclick="fetchPlayerStats()">ПОИСК</button>
+<div class="viewport">
+    
+    <div id="view-hangar" class="section active">
+        <div class="glass-card">
+            <h3 style="margin-bottom: 15px; font-family: 'Orbitron';">СИНХРОНИЗАЦИЯ LESTA</h3>
+            <div class="search-grp">
+                <input type="text" id="lesta-nick" placeholder="Ваш ник в игре...">
+                <button class="btn-action" onclick="syncLesta()">SCAN</button>
+            </div>
+            <div id="player-stats-box" style="display: none;">
+                <div class="stat-row"><span class="stat-label">ПОБЕДЫ</span><span class="stat-value" id="res-wr" style="color: var(--safe-green);">--</span></div>
+                <div class="stat-row"><span class="stat-label">СРЕДНИЙ УРОН</span><span class="stat-value" id="res-dmg">--</span></div>
+                <div class="stat-row"><span class="stat-label">БОЕВ</span><span class="stat-value" id="res-battles">--</span></div>
+            </div>
         </div>
-        
-        <div id="loader" style="display:none; text-align:center; color: var(--accent-orange);">Соединение с сервером WG...</div>
 
-        <div class="stat-grid" id="stat-result">
-            <div class="stat-card">
-                <span>Бои</span>
-                <b id="res-battles">0</b>
+        <h3 style="margin-bottom: 15px; font-family: 'Orbitron'; color: var(--text-silver);">МОЙ АНГАР</h3>
+        <div class="inv-grid" id="inventory-list">
             </div>
-            <div class="stat-card wr">
-                <span>Победы</span>
-                <b id="res-wr">0%</b>
-            </div>
-            <div class="stat-card">
-                <span>Урон за бой</span>
-                <b id="res-dmg">0</b>
-            </div>
-            <div class="stat-card">
-                <span>Личный Рейтинг</span>
-                <b id="res-rating">0</b>
-            </div>
+    </div>
+
+    <div id="view-market" class="section">
+        <div class="glass-card" style="text-align: center; border: 2px solid var(--accent); animation: glow 3s infinite;">
+            <div style="font-size: 64px; margin-bottom: 10px;">🛡️</div>
+            <h2 style="font-family: 'Orbitron'; color: var(--accent);">КОНТЕЙНЕР "LESTA"</h2>
+            <p style="font-size: 12px; color: var(--text-silver); margin: 10px 0 20px;">Шанс на Объект 260 или AMX M4 54</p>
+            <button class="btn-action" style="width: 100%;" onclick="gambleCase()">ОТКРЫТЬ (500 VC)</button>
         </div>
     </div>
 
-    <div id="page-market" class="page">
-        <h2 style="text-align: center; margin-bottom: 5px;">ЧЕРНЫЙ РЫНОК</h2>
-        <p style="text-align: center; color: var(--text-muted); font-size: 12px; margin-bottom: 30px;">Секретные поставки техники и ресурсов</p>
-
-        <div class="case-container">
-            <div class="case-image">📦</div>
-            <button class="btn-primary" style="padding: 15px 40px; font-size: 16px;" onclick="openCase()">ОТКРЫТЬ (100 VC)</button>
-            
-            <div id="loot-display" class="loot-result">
-                <span style="font-size: 10px; color: #fff; opacity: 0.7;">ВЫ ПОЛУЧИЛИ:</span><br>
-                <b id="loot-item" style="font-size: 22px; display: block; margin-top: 5px;"></b>
-            </div>
+    <div id="view-platoon" class="section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="font-family: 'Orbitron';">ПОИСК ВЗВОДА</h3>
+            <button class="btn-action" style="padding: 8px 15px; font-size: 12px;" onclick="toggleModal(true)">СОЗДАТЬ</button>
         </div>
+        <div id="platoon-feed">
+            </div>
     </div>
+</div>
 
-    <div id="page-platoon" class="page">
-        <h2 style="margin-bottom: 15px;">ПОИСК ВЗВОДА</h2>
-        <div class="platoon-board">
-            <div class="platoon-card">
-                <div class="platoon-info">
-                    <h3>Sniper_2026</h3>
-                    <p>Связь: Discord | Уровни: 8-10</p>
-                </div>
-                <div class="platoon-stats">
-                    <span class="wr">58.4%</span><br>
-                    <button class="btn-primary" style="padding: 5px 15px; font-size: 10px; margin-top: 5px;">ПРИГЛАСИТЬ</button>
-                </div>
-            </div>
-            <div class="platoon-card">
-                <div class="platoon-info">
-                    <h3>HeavyPush</h3>
-                    <p>Без связи | Фарм серебра на 8 ур.</p>
-                </div>
-                <div class="platoon-stats">
-                    <span class="wr" style="color: var(--rarity-blue);">51.2%</span><br>
-                    <button class="btn-primary" style="padding: 5px 15px; font-size: 10px; margin-top: 5px;">ПРИГЛАСИТЬ</button>
-                </div>
-            </div>
-        </div>
+<div id="modal-overlay">
+    <div class="glass-card">
+        <h3 style="margin-bottom: 20px;">НОВАЯ ЗАЯВКА</h3>
+        <input type="text" id="pl-input-nick" class="search-grp" style="width:100%; margin-bottom:15px; padding:12px;" placeholder="Ваш ник...">
+        <input type="text" id="pl-input-wr" class="search-grp" style="width:100%; margin-bottom:15px; padding:12px;" placeholder="Процент побед (напр. 55%)...">
+        <input type="text" id="pl-input-lvl" class="search-grp" style="width:100%; margin-bottom:15px; padding:12px;" placeholder="Уровень (8, 10)...">
+        <button class="btn-action" style="width: 100%;" onclick="publishPlatoon()">ОПУБЛИКОВАТЬ</button>
+        <button class="btn-action" style="width: 100%; background: none; color: #fff; margin-top: 10px;" onclick="toggleModal(false)">ОТМЕНА</button>
     </div>
+</div>
 
-    <nav>
-        <div class="nav-item active" onclick="navPage('page-stats', this)">
-            <svg viewBox="0 0 24 24"><path d="M16 11V3H8v6H2v12h20V11h-6zm-6-6h4v14h-4V5zm-6 6h4v8H4v-8zm16 8h-4v-6h4v6z"/></svg>
-            АНГАР
-        </div>
-        <div class="nav-item" onclick="navPage('page-market', this)">
-            <svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
-            РЫНОК
-        </div>
-        <div class="nav-item" onclick="navPage('page-platoon', this)">
-            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-            ВЗВОД
-        </div>
-    </nav>
+<nav>
+    <a href="#" class="nav-link active" onclick="showPage('view-hangar', this)">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <span>Ангар</span>
+    </a>
+    <a href="#" class="nav-link" onclick="showPage('view-market', this)">
+        <svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
+        <span>Рынок</span>
+    </a>
+    <a href="#" class="nav-link" onclick="showPage('view-platoon', this)">
+        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        <span>Взвод</span>
+    </a>
+</nav>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.setHeaderColor('#161b22');
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-        // Имя пользователя из TG
-        if (tg.initDataUnsafe?.user) {
-            document.getElementById('tg-name').innerText = tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name;
-        }
+    // --- БАЗА ДАННЫХ (LOCALSTORAGE) ---
+    let db = JSON.parse(localStorage.getItem('blitz_db')) || {
+        vc: 2500,
+        inventory: [],
+        platoons: [
+            { nick: 'Varyag_RU', wr: '62%', lvl: '10', time: '5м назад' },
+            { nick: 'Tankist_777', wr: '48%', lvl: '8', time: '12м назад' }
+        ]
+    };
 
-        // Внутренняя экономика
-        let vcTokens = 1500;
-        const balanceEl = document.getElementById('vc-balance');
+    function save() {
+        localStorage.setItem('blitz_db', JSON.stringify(db));
+        updateHeader();
+    }
 
-        // Навигация
-        function navPage(pageId, el) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            el.classList.add('active');
-            tg.HapticFeedback.selectionChanged();
-        }
+    function updateHeader() {
+        document.getElementById('user-vc').innerText = db.vc;
+    }
 
-        // --- ЛОГИКА API WARGAMING (Lesta / WG) ---
-        // Замени application_id на свой реальный ключ от Lesta/Wargaming
-        const WG_APP_ID = 'e7428f7bece3bb697c11f7c75db4ce50'; // Публичный тестовый ключ WG
-        const WG_REGION = 'eu'; // Для Лесты: https://api.tanki.su/
+    // --- НАВИГАЦИЯ ---
+    function showPage(pageId, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        el.classList.add('active');
+        tg.HapticFeedback.impactOccurred('light');
+    }
 
-        async function fetchPlayerStats() {
-            const nick = document.getElementById('blitz-nick').value.trim();
-            if(!nick) return;
+    // --- LESTA API СИНХРОНИЗАЦИЯ ---
+    const APP_ID = 'e7428f7bece3bb697c11f7c75db4ce50'; // Твой ключ Lesta
 
-            document.getElementById('loader').style.display = 'block';
-            document.getElementById('stat-result').style.display = 'none';
-            tg.HapticFeedback.impactOccurred('light');
+    async function syncLesta() {
+        const nick = document.getElementById('lesta-nick').value.trim();
+        if(!nick) return;
 
-            try {
-                // Шаг 1: Ищем account_id по нику
-                const searchRes = await fetch(`https://api.wotblitz.${WG_REGION}/wotb/account/list/?application_id=${WG_APP_ID}&search=${nick}`);
-                const searchData = await searchRes.json();
+        tg.MainButton.showProgress();
+        try {
+            // Поиск по RU региону (Lesta)
+            const searchRes = await fetch(`https://api.wotblitz.ru/wotb/account/list/?application_id=${APP_ID}&search=${nick}`);
+            const searchData = await searchRes.json();
 
-                if(searchData.status === 'ok' && searchData.data.length > 0) {
-                    const accountId = searchData.data[0].account_id;
+            if(searchData.status === 'ok' && searchData.data.length > 0) {
+                const accId = searchData.data[0].account_id;
+                const infoRes = await fetch(`https://api.wotblitz.ru/wotb/account/info/?application_id=${APP_ID}&account_id=${accId}`);
+                const infoData = await infoRes.json();
+                const stats = infoData.data[accId].statistics.all;
 
-                    // Шаг 2: Получаем статистику по account_id
-                    const statsRes = await fetch(`https://api.wotblitz.${WG_REGION}/wotb/account/info/?application_id=${WG_APP_ID}&account_id=${accountId}`);
-                    const statsData = await statsRes.json();
-                    
-                    const player = statsData.data[accountId].statistics.all;
-                    
-                    const battles = player.battles;
-                    const winrate = battles > 0 ? ((player.wins / battles) * 100).toFixed(2) : 0;
-                    const avgDmg = battles > 0 ? Math.round(player.damage_dealt / battles) : 0;
-
-                    document.getElementById('res-battles').innerText = battles.toLocaleString();
-                    document.getElementById('res-wr').innerText = winrate + '%';
-                    document.getElementById('res-dmg').innerText = avgDmg.toLocaleString();
-                    document.getElementById('res-rating').innerText = statsData.data[accountId].global_rating || 'N/A';
-
-                    document.getElementById('stat-result').style.display = 'grid';
-                } else {
-                    tg.showAlert('Игрок не найден');
-                }
-            } catch (error) {
-                tg.showAlert('Ошибка API соединения');
-            } finally {
-                document.getElementById('loader').style.display = 'none';
-            }
-        }
-
-        // --- ЛОГИКА ЧЕРНОГО РЫНКА (КЕЙСЫ) ---
-        // Таблица лута с четкой градацией редкости
-        const lootTable = [
-            { name: "Свободный опыт x500", rarity: "gray", chance: 50 },
-            { name: "500,000 Серебра", rarity: "blue", chance: 30 },
-            { name: "ИС-6 (Премиум VIII)", rarity: "purple", chance: 12 },
-            { name: "T-22 ср. (Коллекционный X)", rarity: "red", chance: 6 },
-            { name: "Крушитель / Smash", rarity: "yellow", chance: 2 }
-        ];
-
-        function openCase() {
-            if (vcTokens < 100) {
-                tg.showAlert("Недостаточно VC Tokens! Заработайте их на арене.");
-                tg.HapticFeedback.notificationOccurred('error');
-                return;
-            }
-
-            // Списываем валюту
-            vcTokens -= 100;
-            balanceEl.innerText = vcTokens;
-            tg.HapticFeedback.impactOccurred('rigid');
-
-            const display = document.getElementById('loot-display');
-            const itemLabel = document.getElementById('loot-item');
-            
-            // Скрываем прошлый результат для эффекта
-            display.style.display = 'none';
-            display.className = 'loot-result'; 
-
-            // Генерация лута на основе шансов
-            const rand = Math.random() * 100;
-            let currentChance = 0;
-            let droppedItem = lootTable[0];
-
-            for (let item of lootTable) {
-                currentChance += item.chance;
-                if (rand <= currentChance) {
-                    droppedItem = item;
-                    break;
-                }
-            }
-
-            // Имитация задержки открытия
-            setTimeout(() => {
-                itemLabel.innerText = droppedItem.name;
-                display.classList.add(`rarity-${droppedItem.rarity}`);
-                display.style.display = 'block';
+                document.getElementById('player-stats-box').style.display = 'block';
+                document.getElementById('res-wr').innerText = ((stats.wins / stats.battles)*100).toFixed(2) + '%';
+                document.getElementById('res-dmg').innerText = Math.round(stats.damage_dealt / stats.battles);
+                document.getElementById('res-battles').innerText = stats.battles.toLocaleString();
                 
-                // Обратная связь в зависимости от редкости
-                if(['red', 'yellow'].includes(droppedItem.rarity)) {
-                    tg.HapticFeedback.notificationOccurred('success');
-                } else {
-                    tg.HapticFeedback.impactOccurred('medium');
-                }
-            }, 400);
+                tg.HapticFeedback.notificationOccurred('success');
+            } else {
+                tg.showAlert("Игрок не найден в базе Lesta!");
+            }
+        } catch(e) {
+            tg.showAlert("Ошибка подключения к API");
+        } finally {
+            tg.MainButton.hideProgress();
         }
-    </script>
+    }
+
+    // --- РЫНОК И КЕЙСЫ ---
+    const loot = [
+        { name: 'Объект 260', lvl: 'X', rarity: 10, chance: 5 },
+        { name: 'AMX M4 54', lvl: 'X', rarity: 10, chance: 10 },
+        { name: 'Progetto 46', lvl: 'VIII', rarity: 8, chance: 25 },
+        { name: 'Bourrasque', lvl: 'VIII', rarity: 8, chance: 30 },
+        { name: 'Бустеры золота', lvl: 'ITEM', rarity: 0, chance: 30 }
+    ];
+
+    function gambleCase() {
+        if(db.vc < 500) return tg.showAlert("Недостаточно VC ресурсов!");
+        
+        db.vc -= 500;
+        tg.HapticFeedback.impactOccurred('medium');
+
+        const roll = Math.random() * 100;
+        let pool = 0;
+        let win = loot[loot.length-1];
+
+        for(let item of loot) {
+            pool += item.chance;
+            if(roll <= pool) {
+                win = item;
+                break;
+            }
+        }
+
+        if(win.rarity > 0) {
+            db.inventory.unshift(win);
+            tg.showAlert(`🔥 ТРОФЕЙ: ${win.name} (${win.lvl})`);
+        } else {
+            tg.showAlert(`Обычный дроп: ${win.name}`);
+        }
+        
+        save();
+        renderInventory();
+    }
+
+    function renderInventory() {
+        const list = document.getElementById('inventory-list');
+        if(db.inventory.length === 0) {
+            list.innerHTML = `<p style="grid-column: span 2; color: #4b5563; text-align: center;">Ангар пуст. Откройте контейнеры на рынке.</p>`;
+            return;
+        }
+        list.innerHTML = db.inventory.map(t => `
+            <div class="tank-card rarity-${t.rarity}">
+                <div class="tank-level">${t.lvl} LEVEL</div>
+                <div class="tank-name">${t.name}</div>
+            </div>
+        `).join('');
+    }
+
+    // --- ВЗВОД (P2P) ---
+    function toggleModal(show) {
+        document.getElementById('modal-overlay').style.display = show ? 'block' : 'none';
+    }
+
+    function publishPlatoon() {
+        const nick = document.getElementById('pl-input-nick').value;
+        const wr = document.getElementById('pl-input-wr').value;
+        const lvl = document.getElementById('pl-input-lvl').value;
+
+        if(!nick || !wr) return tg.showAlert("Заполните данные!");
+
+        db.platoons.unshift({ nick, wr, lvl, time: 'Только что' });
+        save();
+        renderPlatoons();
+        toggleModal(false);
+        tg.HapticFeedback.notificationOccurred('success');
+    }
+
+    function renderPlatoons() {
+        const feed = document.getElementById('platoon-feed');
+        feed.innerHTML = db.platoons.map(p => `
+            <div class="p2p-request">
+                <div class="p2p-info">
+                    <h4>${p.nick}</h4>
+                    <div class="p2p-meta">Статистика: <span style="color: var(--accent)">${p.wr}</span> • Уровни: ${p.lvl}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="p2p-badge">${p.time}</div>
+                    <button class="btn-action" style="padding: 5px 10px; font-size: 10px; margin-top: 5px;" onclick="tg.showAlert('Запрос отправлен игроку!')">ВСТУПИТЬ</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Инициализация
+    updateHeader();
+    renderInventory();
+    renderPlatoons();
+</script>
 </body>
 </html>
